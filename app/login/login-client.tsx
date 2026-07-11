@@ -56,11 +56,35 @@ export function LoginClient() {
 
   return (
     <main className="min-h-svh flex items-center justify-center bg-background p-4">
+      <div className="flex w-full max-w-4xl items-stretch gap-8">
+        {/* Иллюстрация — только на десктопе */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="relative hidden flex-1 overflow-hidden rounded-3xl border lg:block"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/hero-shield.png"
+            alt=""
+            aria-hidden
+            className="absolute inset-0 size-full object-cover"
+          />
+          <div className="absolute inset-0 bg-linear-to-t from-black/70 via-transparent to-transparent" />
+          <div className="absolute bottom-0 p-6">
+            <p className="font-display text-lg font-bold text-white">Порядок в городе — наша работа</p>
+            <p className="mt-1 text-sm text-white/70">
+              Отчёты, проверки, рейтинги и обучение — всё в одной панели
+            </p>
+          </div>
+        </motion.div>
+
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
-        className="w-full max-w-sm"
+        className="w-full max-w-sm self-center"
       >
         <div className="flex flex-col items-center gap-3 mb-6">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg">
@@ -160,6 +184,7 @@ export function LoginClient() {
           </CardContent>
         </Card>
       </motion.div>
+      </div>
     </main>
   );
 }

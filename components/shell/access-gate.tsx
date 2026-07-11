@@ -21,8 +21,20 @@ export function AccessGate() {
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className="bg-card rounded-2xl border p-6 text-center"
+        className="bg-card overflow-hidden rounded-2xl border text-center"
       >
+        {/* Иллюстрация закрытого сейфа */}
+        <div className="relative h-40 w-full">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/access-gate.png"
+            alt=""
+            aria-hidden
+            className="absolute inset-0 size-full object-cover object-center"
+          />
+          <div className="from-card absolute inset-0 bg-linear-to-t via-transparent to-transparent" />
+        </div>
+        <div className="p-6 pt-2">
         <div className="bg-amber/15 text-amber-deep mx-auto mb-4 flex size-12 items-center justify-center rounded-full">
           <ShieldAlert className="size-6" />
         </div>
@@ -41,6 +53,7 @@ export function AccessGate() {
           <Button variant="ghost" onClick={() => void signOut()}>
             Выйти из аккаунта
           </Button>
+        </div>
         </div>
       </motion.div>
 

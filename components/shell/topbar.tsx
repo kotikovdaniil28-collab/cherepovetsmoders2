@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
-import { Moon, Sun, LogOut, Zap, ShieldCheck, Gamepad2 } from "lucide-react";
+import { Moon, Sun, LogOut, Zap, ShieldCheck, Gamepad2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { NAV_ITEMS, visibleItems } from "@/components/shell/nav-items";
 import { Button } from "@/components/ui/button";
@@ -44,16 +44,23 @@ export function Topbar() {
 
   const items = visibleItems(roles, NAV_ITEMS);
 
-  // Прокрутка навигации колесом мыши + индикатор «справа есть ещё»
+  // Прокрутка навигации: колесо мыши + явные кнопки-стрелки по краям
   const navRef = useRef<HTMLElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const scrollNav = (dir: -1 | 1) => {
+    navRef.current?.scrollBy({ left: dir * 220, behavior: "smooth" });
+  };
 
   useEffect(() => {
     const el = navRef.current;
     if (!el) return;
 
-    const update = () =>
+    const update = () => {
+      setCanScrollLeft(el.scrollLeft > 8);
       setCanScrollRight(el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
+    };
     update();
 
     const onWheel = (e: WheelEvent) => {
@@ -140,12 +147,30 @@ export function Topbar() {
             );
           })}
           </nav>
-          {/* Градиент-подсказка: справа есть ещё пункты */}
+          {/* Кнопки-стрелки: явное листание навигации */}
+          {canScrollLeft && (
+            <div className="absolute inset-y-0 left-0 flex items-center">
+              <div aria-hidden className="from-background absolute inset-y-0 left-0 w-12 bg-linear-to-r to-transparent" />
+              <button
+                onClick={() => scrollNav(-1)}
+                aria-label="Прокрутить меню влево"
+                className="bg-card hover:bg-secondary relative z-10 flex size-7 items-center justify-center rounded-full border shadow-sm transition-colors"
+              >
+                <ChevronLeft className="size-4" />
+              </button>
+            </div>
+          )}
           {canScrollRight && (
-            <div
-              aria-hidden
-              className="from-background pointer-events-none absolute inset-y-0 right-0 w-10 bg-linear-to-l to-transparent"
-            />
+            <div className="absolute inset-y-0 right-0 flex items-center">
+              <div aria-hidden className="from-background absolute inset-y-0 right-0 w-12 bg-linear-to-l to-transparent" />
+              <button
+                onClick={() => scrollNav(1)}
+                aria-label="Прокрутить меню вправо"
+                className="bg-card hover:bg-secondary relative z-10 flex size-7 items-center justify-center rounded-full border shadow-sm transition-colors"
+              >
+                <ChevronRight className="size-4" />
+              </button>
+            </div>
           )}
         </div>
 

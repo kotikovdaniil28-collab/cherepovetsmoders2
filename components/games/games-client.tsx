@@ -106,18 +106,29 @@ export function GamesClient() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
-            <Gamepad2 className="size-5" />
-          </span>
-          <div>
-            <h1 className="font-display text-xl font-bold tracking-tight md:text-2xl">Игры</h1>
-            <p className="text-muted-foreground text-sm">Ставка списывается при запуске игры</p>
+      {/* Баннер с аркадной иллюстрацией */}
+      <div className="relative overflow-hidden rounded-2xl border">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/games-arcade.png"
+          alt=""
+          aria-hidden
+          className="absolute inset-0 size-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/50 to-black/20" />
+        <div className="relative flex flex-wrap items-center justify-between gap-3 p-6 md:p-8">
+          <div className="flex items-center gap-3">
+            <span className="bg-primary/20 text-primary flex size-10 shrink-0 items-center justify-center rounded-xl backdrop-blur-sm">
+              <Gamepad2 className="size-5" />
+            </span>
+            <div>
+              <h1 className="font-display text-xl font-bold tracking-tight text-white md:text-2xl">Игры</h1>
+              <p className="text-sm text-white/70">Ставка списывается при запуске игры</p>
+            </div>
           </div>
-        </div>
-        <div className="bg-primary/10 text-primary rounded-xl px-4 py-2 text-sm font-bold tabular-nums">
-          {xp.gameXp} игровых XP
+          <div className="bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-bold tabular-nums">
+            {xp.gameXp} игровых XP
+          </div>
         </div>
       </div>
 

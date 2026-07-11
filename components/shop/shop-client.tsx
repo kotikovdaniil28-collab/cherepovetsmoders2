@@ -149,15 +149,28 @@ export function ShopClient() {
   return (
     <div className="flex flex-col gap-6">
       <Reveal>
-        <div className="flex items-center gap-3">
-          <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
-            <ShoppingBag className="size-5" />
-          </span>
-          <div>
-            <h1 className="font-display text-xl font-bold tracking-tight md:text-2xl">Магазин</h1>
-            <p className="text-muted-foreground text-sm">
-              Покупки за XP и баллы — предмет выдаёт руководство
-            </p>
+        {/* Баннер с сундуком сокровищ */}
+        <div className="relative overflow-hidden rounded-2xl border">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/shop-vault.png"
+            alt=""
+            aria-hidden
+            className="absolute inset-0 size-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/50 to-transparent" />
+          <div className="relative flex items-center gap-3 p-6 md:p-8">
+            <span className="bg-primary/20 text-primary flex size-10 shrink-0 items-center justify-center rounded-xl backdrop-blur-sm">
+              <ShoppingBag className="size-5" />
+            </span>
+            <div>
+              <h1 className="font-display text-xl font-bold tracking-tight text-white md:text-2xl">
+                Магазин
+              </h1>
+              <p className="text-sm text-white/70">
+                Покупки за XP и баллы — предмет выдаёт руководство
+              </p>
+            </div>
           </div>
         </div>
       </Reveal>
