@@ -19,7 +19,8 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
 import { getSupabase } from "@/lib/supabase/client";
-import { addGameXp } from "@/lib/xp";
+import { addGameXp, addModXp } from "@/lib/xp";
+import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RouletteGame } from "@/components/games/roulette-game";
@@ -64,23 +65,34 @@ type GameId =
   | "wheel"
   | "shells";
 
+type Wallet = "game" | "mod";
+
 export function GamesClient() {
   const { user, xp, refreshXp } = useAuth();
   const [active, setActive] = useState<GameId | null>(null);
   const [paying, setPaying] = useState(false);
+  // Выбор валюты: игровые XP или реальные (XP модерации).
+  // Ставка и выигрыш ВСЕГДА в одной и той же валюте.
+  const [wallet, setWallet] = useState<Wallet>("game");
 
-  // Игры оплачиваются и выигрывают только Игровой XP (тренажёры + игры),
-  // XP модерации (отчёты) на игры не тратится
+  const balance = wallet === "game" ? xp.gameXp : xp.modXp;
+  const addDelta = wallet === "game" ? addGameXp : addModXp;
+  const walletName = wallet === "game" ? "игровых XP" : "XP модерации";
+
   const openGame = async (id: string, cost: number) => {
     if (!user) return;
-    if (xp.gameXp < cost) {
-      toast.error(`Не хватает игрового XP: нужно ${cost}. Заработай в тренажёрах!`);
+    if (balance < cost) {
+      toast.error(
+        wallet === "game"
+          ? `Не хватает игрового XP: нужно ${cost}. Заработай в тренажёрах!`
+          : `Не хватает XP модерации: нужно ${cost}. Сдавай отчёты!`
+      );
       return;
     }
     setPaying(true);
     try {
       const game = GAMES.find((g) => g.id === id)!;
-      await addGameXp(getSupabase(), user.id, -cost, `Игра: ${game.title}`);
+      await addDelta(getSupabase(), user.id, -cost, `Игра: ${game.title}`);
       await refreshXp();
       setActive(id as GameId);
     } catch {
@@ -94,7 +106,7 @@ export function GamesClient() {
     if (!user) return;
     try {
       if (delta !== 0) {
-        await addGameXp(getSupabase(), user.id, delta, label);
+        await addDelta(getSupabase(), user.id, delta, label);
       }
       await refreshXp();
     } catch {
@@ -123,12 +135,37 @@ export function GamesClient() {
             </span>
             <div>
               <h1 className="font-display text-xl font-bold tracking-tight text-white md:text-2xl">Игры</h1>
-              <p className="text-sm text-white/70">Ставка списывается при запуске игры</p>
+              <p className="text-sm text-white/70">Ставка и выигрыш — в выбранной валюте</p>
             </div>
           </div>
           <div className="bg-primary text-primary-foreground rounded-xl px-4 py-2 text-sm font-bold tabular-nums">
-            {xp.gameXp} игровых XP
+            {balance} {walletName}
           </div>
+        </div>
+      </div>
+
+      {/* Переключатель валюты: на что играем */}
+      <div className="bg-card flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-3">
+        <p className="text-muted-foreground px-1 text-sm">Играть на:</p>
+        <div className="bg-secondary flex rounded-xl p-1">
+          <button
+            onClick={() => setWallet("game")}
+            className={cn(
+              "rounded-lg px-4 py-2 text-sm font-semibold transition-colors",
+              wallet === "game" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Игровые XP · {xp.gameXp}
+          </button>
+          <button
+            onClick={() => setWallet("mod")}
+            className={cn(
+              "rounded-lg px-4 py-2 text-sm font-semibold transition-colors",
+              wallet === "mod" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Реальные XP · {xp.modXp}
+          </button>
         </div>
       </div>
 

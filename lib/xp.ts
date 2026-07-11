@@ -36,6 +36,14 @@ export async function addGameXp(supa: SupabaseClient, userId: string, amount: nu
   ]);
 }
 
+// Дельта XP модерации (ставки/выигрыши в играх за реальный XP, покупки в магазине)
+export async function addModXp(supa: SupabaseClient, userId: string, amount: number, note = "") {
+  if (!Number.isFinite(amount) || amount === 0) return;
+  await supa.from("reports").insert([
+    { id: makeId("mxp_"), email: KV.GAME_XP, link: userId, xp: amount, status: "mod", date: note },
+  ]);
+}
+
 // Проверка: получал ли пользователь награду с этой пометкой (защита от повторного клейма квестов)
 export async function hasGameXpNote(supa: SupabaseClient, userId: string, note: string) {
   const { data } = await supa

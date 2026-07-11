@@ -99,8 +99,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       bootstrapped = true;
       setTimeout(async () => {
         if (!mounted) return;
-        await Promise.all([loadRoles(u), loadXp(u)]);
-        if (mounted) setLoading(false);
+        // Страховка: не держим экран загрузки, даже если запросы зависли
+        const guard = setTimeout(() => mounted && setLoading(false), 5000);
+        try {
+          await Promise.all([loadRoles(u), loadXp(u)]);
+        } finally {
+          clearTimeout(guard);
+          if (mounted) setLoading(false);
+        }
       }, 0);
     });
 
