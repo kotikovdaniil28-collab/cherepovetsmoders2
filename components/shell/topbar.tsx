@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -43,6 +44,43 @@ export function Topbar() {
 
   const items = visibleItems(roles, NAV_ITEMS);
 
+  // Прокрутка навигации колесом мыши + индикатор «справа есть ещё»
+  const navRef = useRef<HTMLElement>(null);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+
+    const update = () =>
+      setCanScrollRight(el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
+    update();
+
+    const onWheel = (e: WheelEvent) => {
+      if (el.scrollWidth <= el.clientWidth) return;
+      e.preventDefault();
+      el.scrollLeft += e.deltaY + e.deltaX;
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("scroll", update);
+      ro.disconnect();
+    };
+  }, [items.length]);
+
+  // Автопрокрутка к активному пункту, чтобы он не оставался за краем
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const active = el.querySelector<HTMLElement>("[data-active='true']");
+    active?.scrollIntoView({ inline: "nearest", block: "nearest", behavior: "smooth" });
+  }, [pathname]);
+
   return (
     <header className="nav-blur sticky top-0 z-40 border-b">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 md:px-8">
@@ -63,11 +101,13 @@ export function Topbar() {
           </span>
         </Link>
 
-        {/* Десктоп-навигация */}
-        <nav
-          className="scrollbar-none ml-2 hidden flex-1 items-center gap-0.5 overflow-x-auto lg:flex"
-          aria-label="Основная навигация"
-        >
+        {/* Десктоп-навигация: колесо мыши листает, справа градиент-подсказка */}
+        <div className="relative ml-2 hidden min-w-0 flex-1 lg:block">
+          <nav
+            ref={navRef}
+            className="scrollbar-none flex items-center gap-0.5 overflow-x-auto"
+            aria-label="Основная навигация"
+          >
           {items.map((item) => {
             const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
             const Icon = item.icon;
@@ -75,6 +115,7 @@ export function Topbar() {
               <Link
                 key={item.href}
                 href={item.href}
+                data-active={active}
                 className={cn(
                   "relative inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold whitespace-nowrap transition-colors",
                   active
@@ -98,7 +139,15 @@ export function Topbar() {
               </Link>
             );
           })}
-        </nav>
+          </nav>
+          {/* Градиент-подсказка: справа есть ещё пункты */}
+          {canScrollRight && (
+            <div
+              aria-hidden
+              className="from-background pointer-events-none absolute inset-y-0 right-0 w-10 bg-linear-to-l to-transparent"
+            />
+          )}
+        </div>
 
         <div className="flex flex-1 items-center justify-end gap-2 lg:flex-none">
           {/* Два кошелька: XP модерации и игровой XP */}
