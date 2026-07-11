@@ -2,28 +2,51 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { KV, KV_EMAILS } from "@/lib/constants";
 import { makeId } from "@/lib/reports";
 
-// Итоговый XP пользователя = сумма xp одобренных отчётов (email = email юзера)
-// + сумма дельт GAME_XP (link = user_id)
+// Две валюты:
+// - XP модерации = одобренные отчёты + дельты GAME_XP со status != 'game'
+//   (магазин, рулетка магазина, ручные начисления руководства — legacy-строки 'mod')
+// - Игровой XP = дельты GAME_XP со status = 'game' (тренажёры, квесты, игры)
+//   Тратится ТОЛЬКО на игры.
 
 export async function computeUserXp(supa: SupabaseClient, userId: string, userEmail: string) {
-  const [reportRes, gameRes] = await Promise.all([
+  const [reportRes, deltaRes] = await Promise.all([
     supa.from("reports").select("xp").eq("email", userEmail).gt("xp", 0),
-    supa.from("reports").select("xp").eq("email", KV.GAME_XP).eq("link", userId),
+    supa.from("reports").select("xp, status").eq("email", KV.GAME_XP).eq("link", userId),
   ]);
   const reportXp = (reportRes.data || []).reduce((sum, r) => sum + (Number(r.xp) || 0), 0);
-  const gameXp = (gameRes.data || []).reduce((sum, r) => sum + (Number(r.xp) || 0), 0);
-  return { reportXp, gameXp, total: reportXp + gameXp };
+  let modDelta = 0;
+  let gameXp = 0;
+  for (const r of deltaRes.data || []) {
+    const v = Number(r.xp) || 0;
+    if (String(r.status) === "game") gameXp += v;
+    else modDelta += v;
+  }
+  const modXp = Math.max(0, reportXp + modDelta);
+  gameXp = Math.max(0, gameXp);
+  return { reportXp, modXp, gameXp, total: modXp + gameXp };
 }
 
-// Дельта XP (может быть отрицательной — списание в магазине/играх)
-export async function addGameXp(supa: SupabaseClient, userId: string, amount: number) {
+// Дельта игрового XP (тренажёры, квесты, ставки и выигрыши в играх)
+export async function addGameXp(supa: SupabaseClient, userId: string, amount: number, note = "") {
   if (!Number.isFinite(amount) || amount === 0) return;
   await supa.from("reports").insert([
-    { id: makeId("gxp_"), email: KV.GAME_XP, link: userId, xp: amount, status: "mod" },
+    { id: makeId("gxp_"), email: KV.GAME_XP, link: userId, xp: amount, status: "game", date: note },
   ]);
 }
 
-// Лидерборд: сгруппировать XP по всем пользователям
+// Проверка: получал ли пользователь награду с этой пометкой (защита от повторного клейма квестов)
+export async function hasGameXpNote(supa: SupabaseClient, userId: string, note: string) {
+  const { data } = await supa
+    .from("reports")
+    .select("id")
+    .eq("email", KV.GAME_XP)
+    .eq("link", userId)
+    .eq("date", note)
+    .limit(1);
+  return Boolean(data?.length);
+}
+
+// Лидерборд: сгруппировать XP по всем пользователям (обе валюты в общий рейтинг)
 export async function computeLeaderboard(supa: SupabaseClient) {
   const [repRes, gameRes] = await Promise.all([
     supa.from("reports").select("email, xp").gt("xp", 0).neq("email", KV.GAME_XP),

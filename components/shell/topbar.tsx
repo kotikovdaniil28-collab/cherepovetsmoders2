@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
-import { Moon, Sun, LogOut, Zap, ShieldCheck } from "lucide-react";
+import { Moon, Sun, LogOut, Zap, ShieldCheck, Gamepad2 } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { NAV_ITEMS, visibleItems } from "@/components/shell/nav-items";
 import { Button } from "@/components/ui/button";
@@ -65,7 +65,7 @@ export function Topbar() {
 
         {/* Десктоп-навигация */}
         <nav
-          className="ml-2 hidden flex-1 items-center gap-0.5 overflow-x-auto lg:flex"
+          className="scrollbar-none ml-2 hidden flex-1 items-center gap-0.5 overflow-x-auto lg:flex"
           aria-label="Основная навигация"
         >
           {items.map((item) => {
@@ -101,10 +101,21 @@ export function Topbar() {
         </nav>
 
         <div className="flex flex-1 items-center justify-end gap-2 lg:flex-none">
-          <span className="bg-secondary inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm">
+          {/* Два кошелька: XP модерации и игровой XP */}
+          <span
+            className="bg-secondary inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm"
+            title="XP модерации — за отчёты, тратится в магазине"
+          >
             <Zap className="text-amber-deep size-3.5" />
-            <span className="font-display text-xs font-semibold tabular-nums">{xp.total}</span>
+            <span className="font-display text-xs font-semibold tabular-nums">{xp.modXp}</span>
             <span className="text-muted-foreground hidden text-xs sm:inline">XP</span>
+          </span>
+          <span
+            className="bg-secondary hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-sm sm:inline-flex"
+            title="Игровой XP — за тренажёры и квесты, тратится на игры"
+          >
+            <Gamepad2 className="text-green-deep size-3.5" />
+            <span className="font-display text-xs font-semibold tabular-nums">{xp.gameXp}</span>
           </span>
 
           <button

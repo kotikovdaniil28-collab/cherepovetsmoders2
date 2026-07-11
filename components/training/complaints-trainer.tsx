@@ -1,20 +1,29 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CircleCheck, CircleX, ArrowRightLeft } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/components/auth-provider";
+import { getSupabase } from "@/lib/supabase/client";
+import { addGameXp } from "@/lib/xp";
 import { COMPLAINTS } from "@/lib/data/trainer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 type Complaint = { text: string; evidence: string; type: string };
 
+// 15 игровых XP за каждые 10 верных вердиктов
+const XP_PER_10 = 15;
+
 export function ComplaintsTrainer({ onResolved }: { onResolved: () => void }) {
+  const { user, refreshXp } = useAuth();
   const [current, setCurrent] = useState<Complaint | null>(null);
   const [resolved, setResolved] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [mistakes, setMistakes] = useState(0);
   const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
+  const grantedRef = useRef(0);
 
   const next = useCallback(() => {
     setCurrent(COMPLAINTS[Math.floor(Math.random() * COMPLAINTS.length)] as Complaint);
@@ -25,14 +34,27 @@ export function ComplaintsTrainer({ onResolved }: { onResolved: () => void }) {
     next();
   }, [next]);
 
-  const act = (action: "approve" | "reject" | "pass") => {
+  const act = async (action: "approve" | "reject" | "pass") => {
     if (!current || feedback) return;
     const ok = current.type === action;
     setResolved((n) => n + 1);
     onResolved();
     if (ok) {
-      setCorrect((n) => n + 1);
+      const newCorrect = correct + 1;
+      setCorrect(newCorrect);
       setFeedback({ ok: true, text: "Верный вердикт!" });
+      const earned = Math.floor(newCorrect / 10) * XP_PER_10;
+      if (earned > grantedRef.current && user) {
+        const delta = earned - grantedRef.current;
+        grantedRef.current = earned;
+        try {
+          await addGameXp(getSupabase(), user.id, delta, "Тренажёр жалоб");
+          await refreshXp();
+          toast.success(`+${delta} игровых XP за тренажёр`);
+        } catch {
+          toast.error("Не удалось начислить XP");
+        }
+      }
     } else {
       setMistakes((n) => n + 1);
       const expected =

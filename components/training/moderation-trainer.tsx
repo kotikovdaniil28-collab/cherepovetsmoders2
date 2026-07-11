@@ -6,7 +6,7 @@ import { Check, TriangleAlert, Hammer } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
 import { getSupabase } from "@/lib/supabase/client";
-import { grantModXp } from "@/lib/shop";
+import { addGameXp } from "@/lib/xp";
 import { MOD_MESSAGES, type ModMessage } from "@/lib/data/trainer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,9 +47,9 @@ export function ModerationTrainer({ onResolved }: { onResolved: () => void }) {
         const delta = earned - grantedRef.current;
         grantedRef.current = earned;
         try {
-          await grantModXp(getSupabase(), user.id, delta, "Тренажёр чата");
+          await addGameXp(getSupabase(), user.id, delta, "Тренажёр чата");
           await refreshXp();
-          toast.success(`+${delta} XP за тренажёр`);
+          toast.success(`+${delta} игровых XP за тренажёр`);
         } catch {
           toast.error("Не удалось начислить XP");
         }

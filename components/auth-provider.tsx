@@ -17,7 +17,7 @@ import { computeUserXp } from "@/lib/xp";
 type AuthState = {
   user: User | null;
   roles: RoleInfo;
-  xp: { reportXp: number; gameXp: number; total: number };
+  xp: { reportXp: number; modXp: number; gameXp: number; total: number };
   loading: boolean;
   refreshRoles: () => Promise<void>;
   refreshXp: () => Promise<void>;
@@ -27,7 +27,7 @@ type AuthState = {
 const AuthContext = createContext<AuthState>({
   user: null,
   roles: emptyRoleInfo(),
-  xp: { reportXp: 0, gameXp: 0, total: 0 },
+  xp: { reportXp: 0, modXp: 0, gameXp: 0, total: 0 },
   loading: true,
   refreshRoles: async () => {},
   refreshXp: async () => {},
@@ -37,7 +37,7 @@ const AuthContext = createContext<AuthState>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<RoleInfo>(emptyRoleInfo());
-  const [xp, setXp] = useState({ reportXp: 0, gameXp: 0, total: 0 });
+  const [xp, setXp] = useState({ reportXp: 0, modXp: 0, gameXp: 0, total: 0 });
   const [loading, setLoading] = useState(true);
 
   const loadRoles = useCallback(async (u: User | null) => {
@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadXp = useCallback(async (u: User | null) => {
     if (!u) {
-      setXp({ reportXp: 0, gameXp: 0, total: 0 });
+      setXp({ reportXp: 0, modXp: 0, gameXp: 0, total: 0 });
       return;
     }
     try {

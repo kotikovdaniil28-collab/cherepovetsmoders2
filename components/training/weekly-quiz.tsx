@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
 import { getSupabase } from "@/lib/supabase/client";
 import { makeId } from "@/lib/reports";
+import { addGameXp } from "@/lib/xp";
 import { QUIZZES, type Quiz, type QuizQuestion } from "@/lib/data/quizzes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -90,8 +91,10 @@ export function WeeklyQuiz() {
                   xp: rew,
                 },
               ]);
+            // Начисляем награду в кошелёк игрового XP (иначе она нигде не учтётся)
+            if (rew > 0) await addGameXp(getSupabase(), user.id, rew, `Викторина: ${quiz.id}`);
             setPlayed(true);
-            if (rew > 0) toast.success(`Викторина завершена: +${rew} XP`);
+            if (rew > 0) toast.success(`Викторина завершена: +${rew} игровых XP`);
           } catch {
             toast.error("Не удалось сохранить результат");
           }

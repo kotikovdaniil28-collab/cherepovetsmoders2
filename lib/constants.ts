@@ -11,7 +11,7 @@ export const LEADERSHIP_EMAILS = new Set([
 
 // XP за вердикты по отчётам
 export const STATUS_XP: Record<string, number> = {
-  Норма: 15,
+  Норма: 10,
   Перенорма: 30,
   Натяг: 7,
   "Герой дня": 60,

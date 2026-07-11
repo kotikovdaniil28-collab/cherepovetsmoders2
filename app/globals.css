@@ -204,6 +204,39 @@ h4 {
   -webkit-backdrop-filter: blur(16px);
 }
 
+/* Скрытый скролл для горизонтальных списков (навигация и т.п.) */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Тонкий аккуратный скроллбар для остального контента */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--muted-foreground) 35%, transparent) transparent;
+}
+
+/* Единый заметный focus-ring для клавиатурной навигации */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Мягкий подъём карточек-ссылок при наведении */
+.lift {
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--foreground) 18%, transparent);
+}
+
 /* Прогресс-бары с анимацией роста */
 @keyframes grow-x {
   from {

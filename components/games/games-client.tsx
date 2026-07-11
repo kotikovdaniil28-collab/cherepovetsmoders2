@@ -19,7 +19,7 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
 import { getSupabase } from "@/lib/supabase/client";
-import { grantModXp, spendModXp } from "@/lib/shop";
+import { addGameXp } from "@/lib/xp";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RouletteGame } from "@/components/games/roulette-game";
@@ -69,16 +69,18 @@ export function GamesClient() {
   const [active, setActive] = useState<GameId | null>(null);
   const [paying, setPaying] = useState(false);
 
+  // Игры оплачиваются и выигрывают только Игровой XP (тренажёры + игры),
+  // XP модерации (отчёты) на игры не тратится
   const openGame = async (id: string, cost: number) => {
     if (!user) return;
-    if (xp.total < cost) {
-      toast.error(`Не хватает XP: нужно ${cost}`);
+    if (xp.gameXp < cost) {
+      toast.error(`Не хватает игрового XP: нужно ${cost}. Заработай в тренажёрах!`);
       return;
     }
     setPaying(true);
     try {
       const game = GAMES.find((g) => g.id === id)!;
-      await spendModXp(getSupabase(), user.id, cost, `Игра: ${game.title}`);
+      await addGameXp(getSupabase(), user.id, -cost, `Игра: ${game.title}`);
       await refreshXp();
       setActive(id as GameId);
     } catch {
@@ -92,7 +94,7 @@ export function GamesClient() {
     if (!user) return;
     try {
       if (delta !== 0) {
-        await grantModXp(getSupabase(), user.id, delta, label);
+        await addGameXp(getSupabase(), user.id, delta, label);
       }
       await refreshXp();
     } catch {
@@ -115,7 +117,7 @@ export function GamesClient() {
           </div>
         </div>
         <div className="bg-primary/10 text-primary rounded-xl px-4 py-2 text-sm font-bold tabular-nums">
-          {xp.total} XP
+          {xp.gameXp} игровых XP
         </div>
       </div>
 

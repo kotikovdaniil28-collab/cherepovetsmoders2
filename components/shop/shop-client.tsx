@@ -166,7 +166,7 @@ export function ShopClient() {
         <Tabs defaultValue="mod">
           <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
             <TabsTrigger value="mod">
-              <Zap className="size-4" /> Модерация · {xp.total} XP
+              <Zap className="size-4" /> Модерация · {xp.modXp} XP
             </TabsTrigger>
             {showAp && (
               <TabsTrigger value="ap">
@@ -187,7 +187,7 @@ export function ShopClient() {
                   key={item.id}
                   item={item}
                   index={i}
-                  balance={xp.total}
+                  balance={xp.modXp}
                   busy={busy}
                   currency="XP"
                   onBuy={(it) => buy(it, "mod")}
