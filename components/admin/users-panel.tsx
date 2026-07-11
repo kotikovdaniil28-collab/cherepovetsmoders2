@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Zap, Coins, ShieldHalf, UserCog } from "lucide-react";
+import { Search, Zap, Coins, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
 import { getSupabase } from "@/lib/supabase/client";
@@ -57,7 +57,7 @@ export function UsersPanel() {
   const [selected, setSelected] = useState<UserRow | null>(null);
   const [grantAmount, setGrantAmount] = useState("");
   const [grantReason, setGrantReason] = useState("");
-  const [grantType, setGrantType] = useState<"xp" | "ap" | "fsb">("xp");
+  const [grantType, setGrantType] = useState<"xp" | "game">("xp");
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -165,42 +165,21 @@ export function UsersPanel() {
     try {
       const supa = getSupabase();
       const reason = grantReason.trim();
-      // Форматы записей 1:1 из legacy (MANUAL_XP / AP_POINTS / FSB_POINTS)
-      if (grantType === "xp") {
-        await supa.from("reports").insert([
-          {
-            id: makeId("mxp_"),
-            email: "MANUAL_XP",
-            link: selected.user_id,
-            date: reason || "Ручная выдача XP",
-            status: "mod",
-            xp: amount,
-          },
-        ]);
-      } else if (grantType === "ap") {
-        await supa.from("reports").insert([
-          {
-            id: makeId("appts_"),
-            email: "AP_POINTS",
-            link: selected.user_id,
-            date: reason || "Ручная выдача баллов АП",
-            status: "ap",
-            xp: amount,
-          },
-        ]);
-      } else {
-        await supa.from("reports").insert([
-          {
-            id: makeId("fsbpts_"),
-            email: "FSB_POINTS",
-            link: selected.user_id,
-            date: reason || "Ручная выдача баллов ФСБ",
-            status: "fsb",
-            xp: amount,
-          },
-        ]);
-      }
-      toast.success(`Начислено ${amount} (${grantType === "xp" ? "XP" : "баллов"}) для ${selected.nickname}`);
+      // Кошельки считаются из строк GAME_XP: status='mod' → XP модерации, status='game' → игровые
+      const { error } = await supa.from("reports").insert([
+        {
+          id: makeId(grantType === "xp" ? "mxp_" : "mgxp_"),
+          email: KV.GAME_XP,
+          link: selected.user_id,
+          date: reason || (grantType === "xp" ? "Ручная выдача XP" : "Ручная выдача игровых XP"),
+          status: grantType === "xp" ? "mod" : "game",
+          xp: amount,
+        },
+      ]);
+      if (error) throw new Error(error.message);
+      toast.success(
+        `Начислено ${amount} ${grantType === "xp" ? "XP" : "игровых XP"} для ${selected.nickname}`
+      );
       setGrantAmount("");
       setGrantReason("");
     } catch {
@@ -328,18 +307,15 @@ export function UsersPanel() {
                 <Label>Начисление / списание</Label>
                 <div className="flex gap-2">
                   <Select value={grantType} onValueChange={(v) => setGrantType(v as typeof grantType)}>
-                    <SelectTrigger className="w-36">
+                    <SelectTrigger className="w-44">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="xp">
-                        <Zap className="size-4" /> XP
+                        <Zap className="size-4" /> XP модерации
                       </SelectItem>
-                      <SelectItem value="ap">
-                        <Coins className="size-4" /> Баллы АП
-                      </SelectItem>
-                      <SelectItem value="fsb">
-                        <ShieldHalf className="size-4" /> Баллы ФСБ
+                      <SelectItem value="game">
+                        <Coins className="size-4" /> Игровые XP
                       </SelectItem>
                     </SelectContent>
                   </Select>

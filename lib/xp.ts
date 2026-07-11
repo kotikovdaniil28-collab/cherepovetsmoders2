@@ -9,12 +9,14 @@ import { makeId } from "@/lib/reports";
 //   Тратится ТОЛЬКО на игры.
 
 export async function computeUserXp(supa: SupabaseClient, userId: string, userEmail: string) {
-  const [reportRes, deltaRes] = await Promise.all([
+  const [reportRes, deltaRes, manualRes] = await Promise.all([
     supa.from("reports").select("xp").eq("email", userEmail).gt("xp", 0),
     supa.from("reports").select("xp, status").eq("email", KV.GAME_XP).eq("link", userId),
+    // Legacy-строки ручной выдачи от бота (MANUAL_XP) — тоже XP модерации
+    supa.from("reports").select("xp").eq("email", "MANUAL_XP").eq("link", userId),
   ]);
   const reportXp = (reportRes.data || []).reduce((sum, r) => sum + (Number(r.xp) || 0), 0);
-  let modDelta = 0;
+  let modDelta = (manualRes.data || []).reduce((sum, r) => sum + (Number(r.xp) || 0), 0);
   let gameXp = 0;
   for (const r of deltaRes.data || []) {
     const v = Number(r.xp) || 0;
