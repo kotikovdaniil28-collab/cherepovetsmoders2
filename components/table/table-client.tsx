@@ -38,11 +38,9 @@ export function TableClient() {
     let mounted = true;
     (async () => {
       const supa = getSupabase();
-      const { data } = await supa
-        .from("reports")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(1500);
+      // В таблице reports нет created_at — сортируем на клиенте по дате отчёта
+      const { data, error } = await supa.from("reports").select("*").limit(1500);
+      if (error) console.error("[table] load error:", error.message);
       if (!mounted) return;
       const mapped: Row[] = ((data || []) as ReportRow[])
         .filter((r) => !KV_EMAILS.has(String(r.email)))

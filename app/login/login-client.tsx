@@ -73,9 +73,9 @@ export function LoginClient() {
           />
           <div className="absolute inset-0 bg-linear-to-t from-black/70 via-transparent to-transparent" />
           <div className="absolute bottom-0 p-6">
-            <p className="font-display text-lg font-bold text-white">Порядок в городе — наша работа</p>
+            <p className="font-display text-lg font-bold text-white">Порядок на сервере — наша работа</p>
             <p className="mt-1 text-sm text-white/70">
-              Отчёты, проверки, рейтинги и обучение — всё в одной панели
+              Отчёты, проверки, рейтинги и обучение — всё в одной панели Discord-модерации
             </p>
           </div>
         </motion.div>

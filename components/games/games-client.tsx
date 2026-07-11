@@ -107,16 +107,16 @@ export function GamesClient() {
   return (
     <div className="flex flex-col gap-6">
       {/* Баннер с аркадной иллюстрацией */}
-      <div className="relative overflow-hidden rounded-2xl border">
+      <div className="relative min-h-36 overflow-hidden rounded-2xl border md:min-h-44">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/games-arcade.png"
           alt=""
           aria-hidden
-          className="absolute inset-0 size-full object-cover object-center"
+          className="absolute inset-0 size-full object-cover object-right"
         />
-        <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/50 to-black/20" />
-        <div className="relative flex flex-wrap items-center justify-between gap-3 p-6 md:p-8">
+        <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/40 to-transparent" />
+        <div className="relative flex min-h-36 flex-wrap items-center justify-between gap-3 p-6 md:min-h-44 md:p-8">
           <div className="flex items-center gap-3">
             <span className="bg-primary/20 text-primary flex size-10 shrink-0 items-center justify-center rounded-xl backdrop-blur-sm">
               <Gamepad2 className="size-5" />

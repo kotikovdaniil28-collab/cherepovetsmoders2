@@ -7,16 +7,21 @@ import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
 import { getSupabase } from "@/lib/supabase/client";
 import { addGameXp } from "@/lib/xp";
-import { MOD_MESSAGES, type ModMessage } from "@/lib/data/trainer";
+import { MOD_MESSAGES } from "@/lib/data/trainer";
+import { RULE_MESSAGES } from "@/lib/data/trainer-rules";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 // Тренажёр чата: как в legacy — 15 XP за каждые 10 правильных решений
 const XP_PER_10 = 15;
 
+// Объединённый пул: legacy-сообщения + новые вопросы с привязкой к пунктам правил
+type TrainerMessage = { type: string; text: string; rule?: string };
+const ALL_MESSAGES: TrainerMessage[] = [...MOD_MESSAGES, ...RULE_MESSAGES];
+
 export function ModerationTrainer({ onResolved }: { onResolved: () => void }) {
   const { user, refreshXp } = useAuth();
-  const [current, setCurrent] = useState<ModMessage | null>(null);
+  const [current, setCurrent] = useState<TrainerMessage | null>(null);
   const [resolved, setResolved] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [mistakes, setMistakes] = useState(0);
@@ -24,7 +29,7 @@ export function ModerationTrainer({ onResolved }: { onResolved: () => void }) {
   const grantedRef = useRef(0);
 
   const next = useCallback(() => {
-    setCurrent(MOD_MESSAGES[Math.floor(Math.random() * MOD_MESSAGES.length)]);
+    setCurrent(ALL_MESSAGES[Math.floor(Math.random() * ALL_MESSAGES.length)]);
     setFeedback(null);
   }, []);
 
@@ -40,7 +45,7 @@ export function ModerationTrainer({ onResolved }: { onResolved: () => void }) {
     if (ok) {
       const newCorrect = correct + 1;
       setCorrect(newCorrect);
-      setFeedback({ ok: true, text: "Верное решение!" });
+      setFeedback({ ok: true, text: current.rule ? `Верно! ${current.rule}` : "Верное решение!" });
       // Начисляем 15 XP за каждые полные 10 правильных
       const earned = Math.floor(newCorrect / 10) * XP_PER_10;
       if (earned > grantedRef.current && user) {
@@ -58,9 +63,11 @@ export function ModerationTrainer({ onResolved }: { onResolved: () => void }) {
       setMistakes((n) => n + 1);
       const expected =
         current.type === "good" ? "сообщение нормальное" : current.type === "warn" ? "нужен пред/мут" : "нужен бан";
-      setFeedback({ ok: false, text: `Ошибка: ${expected}.` });
+      const why = current.rule ? ` ${current.rule}` : "";
+      setFeedback({ ok: false, text: `Ошибка: ${expected}.${why}` });
     }
-    setTimeout(next, 900);
+    // Даем больше времени прочитать объяснение при ошибке или наличии пункта правил
+    setTimeout(next, !ok || current.rule ? 3200 : 900);
   };
 
   return (

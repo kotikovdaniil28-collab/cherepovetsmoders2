@@ -15,7 +15,7 @@ const mono = JetBrains_Mono({ subsets: ["latin", "cyrillic"], variable: "--font-
 
 export const metadata: Metadata = {
   title: "CHEREPOVETS · Модерация",
-  description: "Рабочая панель модерации CHEREPOVETS",
+  description: "Рабочее пространство модерации Discord-сервера CHEREPOVETS",
 };
 
 export const viewport: Viewport = {

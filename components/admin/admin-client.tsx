@@ -48,7 +48,7 @@ export function AdminClient() {
           {(roles.isCreator || roles.isLeadership) && (
             <TabsTrigger value="instructions">Инструкции</TabsTrigger>
           )}
-          {roles.isCreator && <TabsTrigger value="ai">AI</TabsTrigger>}
+          {(roles.isCreator || roles.isLeadership) && <TabsTrigger value="ai">AI (API-ключ)</TabsTrigger>}
         </TabsList>
         <TabsContent value="users">
           <UsersPanel />
@@ -64,7 +64,7 @@ export function AdminClient() {
             <InstructionEditorPanel />
           </TabsContent>
         )}
-        {roles.isCreator && (
+        {(roles.isCreator || roles.isLeadership) && (
           <TabsContent value="ai">
             <AiSettingsPanel />
           </TabsContent>
