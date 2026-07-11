@@ -15,7 +15,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { useAuth } from "@/components/auth-provider";
-import { isAnyAdmin } from "@/lib/roles";
+import { isAnyAdmin, isStaff } from "@/lib/roles";
 
 export type NavItem = {
   href: string;
@@ -42,9 +42,11 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/admin", label: "Админ", short: "Админ", icon: ShieldCheck, admin: true },
 ];
 
-/** Пункты нижнего таб-бара — самое важное для телефона */
-export const TAB_HREFS = ["/", "/reports", "/review", "/shop", "/games", "/help", "/profile"];
+/** Пункты нижнего таб-бара — самое важное для телефона (остальное в «Ещё») */
+export const TAB_HREFS = ["/", "/reports", "/review", "/table", "/profile"];
 
 export function visibleItems(roles: ReturnType<typeof useAuth>["roles"], items: NavItem[]) {
+  // Без статуса модератора (до выдачи прав руководством) виден только профиль
+  if (!isStaff(roles)) return items.filter((i) => i.href === "/profile");
   return items.filter((i) => !i.admin || isAnyAdmin(roles));
 }

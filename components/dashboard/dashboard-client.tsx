@@ -45,6 +45,7 @@ export function DashboardClient() {
   const [nickname, setNickname] = useState("");
   const [career, setCareer] = useState<{ rank?: string | null; rank_started_at?: string | null } | null>(null);
   const [pendingReview, setPendingReview] = useState(0);
+  const [vkLinked, setVkLinked] = useState(true);
   const [loading, setLoading] = useState(true);
 
   const admin = isAnyAdmin(roles);
@@ -56,16 +57,18 @@ export function DashboardClient() {
 
     (async () => {
       const email = user.email || "";
-      const [repRes, nickRes, careerRes] = await Promise.all([
+      const [repRes, nickRes, careerRes, vkRes] = await Promise.all([
         // В таблице reports нет created_at — сортируем по id (в нём таймстамп)
         supa.from("reports").select("*").eq("email", email).order("id", { ascending: false }),
         supa.from("user_stats").select("nickname").eq("user_id", user.id).maybeSingle(),
         supa.from("moderator_careers").select("rank, rank_started_at").eq("site_user_id", user.id).maybeSingle(),
+        supa.from("vk_links").select("vk_user_id").eq("site_user_id", user.id).maybeSingle(),
       ]);
       if (!mounted) return;
       setRows(((repRes.data || []) as ReportRow[]).filter((r) => !KV_EMAILS.has(String(r.email))));
       setNickname(String(nickRes.data?.nickname || ""));
       setCareer((careerRes.data as typeof career) || null);
+      setVkLinked(Boolean(vkRes.data?.vk_user_id));
       setLoading(false);
 
       if (isAnyAdmin(roles)) {
@@ -162,6 +165,27 @@ export function DashboardClient() {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Баннер привязки VK */}
+      {!loading && !vkLinked && (
+        <Reveal i={0}>
+          <div className="border-amber/50 bg-amber/10 flex flex-wrap items-center gap-3 rounded-2xl border p-4">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold">VK не привязан</p>
+              <p className="text-muted-foreground text-xs">
+                Привяжи VK в профиле, чтобы получать вердикты и уведомления от бота в ЛС
+              </p>
+            </div>
+            <Link
+              href="/profile"
+              className="bg-amber-deep inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold text-white transition-transform hover:scale-[1.03] active:scale-[0.98]"
+            >
+              <ArrowRight className="size-3.5" />
+              Привязать
+            </Link>
+          </div>
+        </Reveal>
+      )}
+
       {/* Баннер руководства */}
       {admin && (
         <Reveal i={0}>

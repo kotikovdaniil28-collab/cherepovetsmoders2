@@ -5,11 +5,16 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
+import { isStaff } from "@/lib/roles";
 import { Topbar } from "@/components/shell/topbar";
 import { Tabbar } from "@/components/shell/tabbar";
+import { AccessGate } from "@/components/shell/access-gate";
+
+/** Страницы, доступные до выдачи статуса модератора */
+const GATE_ALLOWED = new Set(["/profile"]);
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, roles, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -24,6 +29,16 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Loader2 className="size-6 animate-spin" />
           <span className="text-sm">Загрузка панели...</span>
         </div>
+      </div>
+    );
+  }
+
+  // Без статуса модератора (USER_ROLE от бота/руководства) — только профиль и VK-привязка
+  if (!isStaff(roles) && !GATE_ALLOWED.has(pathname)) {
+    return (
+      <div className="bg-background min-h-svh">
+        <Topbar />
+        <AccessGate />
       </div>
     );
   }

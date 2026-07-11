@@ -8,6 +8,7 @@ import { UsersPanel } from "@/components/admin/users-panel";
 import { PurchaseLogsPanel } from "@/components/admin/purchase-logs-panel";
 import { ShopEditorPanel } from "@/components/admin/shop-editor-panel";
 import { InstructionEditorPanel } from "@/components/admin/instruction-editor-panel";
+import { AiSettingsPanel } from "@/components/admin/ai-settings-panel";
 
 export function AdminClient() {
   const { roles, loading } = useAuth();
@@ -47,6 +48,7 @@ export function AdminClient() {
           {(roles.isCreator || roles.isLeadership) && (
             <TabsTrigger value="instructions">Инструкции</TabsTrigger>
           )}
+          {roles.isCreator && <TabsTrigger value="ai">AI</TabsTrigger>}
         </TabsList>
         <TabsContent value="users">
           <UsersPanel />
@@ -60,6 +62,11 @@ export function AdminClient() {
         {(roles.isCreator || roles.isLeadership) && (
           <TabsContent value="instructions">
             <InstructionEditorPanel />
+          </TabsContent>
+        )}
+        {roles.isCreator && (
+          <TabsContent value="ai">
+            <AiSettingsPanel />
           </TabsContent>
         )}
       </Tabs>

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { BookOpen } from "lucide-react";
 import { getSupabase } from "@/lib/supabase/client";
 import { INSTRUCTION_ROW, loadInstruction } from "@/lib/instructions";
+import { AiAssistant } from "@/components/help/ai-assistant";
 import { Card, CardContent } from "@/components/ui/card";
 
 // Безопасный рендер простого Markdown в React-элементы (без innerHTML)
@@ -110,6 +111,8 @@ export function HelpClient() {
           </p>
         </div>
       </div>
+
+      <AiAssistant instruction={text || ""} />
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <Card>

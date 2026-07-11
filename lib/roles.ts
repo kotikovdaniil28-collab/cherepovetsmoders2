@@ -55,3 +55,12 @@ export async function resolveRoles(supa: SupabaseClient, user: User): Promise<Ro
 export function isAnyAdmin(info: RoleInfo) {
   return info.isCreator || info.isLeadership || info.isApAdmin || info.isFsbAdmin;
 }
+
+/**
+ * Состав: пользователь принят (модератор/АП/ФСБ через USER_ROLE от бота
+ * «состав синхронизировать» или выдачу руководством) либо является админом.
+ * Без этого доступен только профиль с VK-привязкой.
+ */
+export function isStaff(info: RoleInfo) {
+  return info.kinds.size > 0 || isAnyAdmin(info);
+}
