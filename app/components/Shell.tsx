@@ -1,10 +1,9 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "../providers";
-import { isCreatorRole, isLeadershipRole } from "../lib/roles";
+import { isCreator, isLeadership } from "../lib/roles";
 
 const NAV = [
   { href: "/profile", label: "Профиль", req: "all" },
@@ -18,8 +17,7 @@ const NAV = [
 function toggleTheme() {
   const root = document.documentElement;
   const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
-  root.setAttribute("data-theme", next);
-  localStorage.setItem("cm-theme", next);
+  root.setAttribute("data-theme", next); localStorage.setItem("cm-theme", next);
 }
 
 export default function Shell({ children }: { children: React.ReactNode }) {
@@ -37,8 +35,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   if (loading) return <div className="center-note">Загрузка…</div>;
   if (!session) return <div className="center-note">Перенаправление ко входу…</div>;
 
-  const lead = isLeadershipRole(profile?.role, profile?.email);
-  const creator = isCreatorRole(profile?.role, profile?.email);
+  const lead = isLeadership(profile?.role, profile?.email);
+  const creator = isCreator(profile?.role, profile?.email);
   const items = NAV.filter((n) => n.req === "all" || (n.req === "lead" && lead) || (n.req === "creator" && creator));
   const initial = (profile?.nickname || profile?.email || "?").slice(0, 1).toUpperCase();
 
@@ -46,21 +44,13 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     <>
       <header className="topbar">
         <Link href="/profile" className="brand"><span className="mark">CH</span><span>CHEREPOVETS</span></Link>
-        <nav className="nav">
-          {items.map((n) => (
-            <Link key={n.href} href={n.href} className={pathname === n.href ? "active" : ""}>{n.label}</Link>
-          ))}
-        </nav>
+        <nav className="nav">{items.map((n) => <Link key={n.href} href={n.href} className={pathname === n.href ? "active" : ""}>{n.label}</Link>)}</nav>
         <span className="spacer" />
         <button className="icon-btn" onClick={toggleTheme} aria-label="Тема">◐</button>
         <button className="icon-btn" onClick={() => signOut()} aria-label="Выйти">⎋</button>
         <span className="avatar">{initial}</span>
       </header>
-      <nav className="tabbar">
-        {items.map((n) => (
-          <Link key={n.href} href={n.href} className={pathname === n.href ? "active" : ""}>{n.label}</Link>
-        ))}
-      </nav>
+      <nav className="tabbar">{items.map((n) => <Link key={n.href} href={n.href} className={pathname === n.href ? "active" : ""}>{n.label}</Link>)}</nav>
       <main className="wrap">{children}</main>
     </>
   );

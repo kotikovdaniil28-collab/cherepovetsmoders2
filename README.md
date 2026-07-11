@@ -1,43 +1,36 @@
-# CHEREPOVETS Moderation
+# CHEREPOVETS Moderation v2
 
-Чистый сайт модерации на Next.js 15 + Supabase. Вход по аккаунту, роли (8 уровней + Создатель),
-отчёты с AI-предвердиктом (Gemini), панель руководства, панель Создателя с вводом API-ключей,
-инструкция с чат-помощником (DeepSeek), рейтинг.
+Сайт модерации на Next.js 15, посаженный на существующую базу Supabase
+(hcefoztytkfskmdchqos). Вход по аккаунту, профиль, отчёты с AI-предвердиктом,
+панель руководства, рейтинг, гайд с чат-помощником, панель Создателя.
 
-## Запуск локально
+## Почему билд теперь проходит
+Раньше падало на `supabaseUrl is required`, потому что при сборке
+`NEXT_PUBLIC_SUPABASE_URL` был пуст. Теперь URL и anon-ключ зашиты как fallback
+(`app/lib/config.ts`), а клиент создаётся лениво и не падает при пререндере.
 
-1. Создай проект на https://supabase.com
-2. SQL Editor → вставь и выполни `supabase/schema.sql`
-3. Authentication → Providers → Email: для удобства выключи "Confirm email"
-4. `cp .env.example .env.local` и заполни 3 значения из Project Settings → API
-5. `npm install`
-6. `npm run dev` → http://localhost:3000
-7. Зарегистрируйся на `/login`. Затем сделай себя Создателем:
-
-```sql
-update public.profiles set role = 'Создатель' where email = 'ТВОЙ_EMAIL';
-```
-
-(email `daniiltimosin72@gmail.com` уже прописан как Создатель на уровне сервера,
-так что можно и не менять роль в базе.)
+## Запуск
+1. `npm install`
+2. (опц.) `cp .env.example .env.local` и задай `SUPABASE_SERVICE_ROLE_KEY` для админ-функций
+3. `npm run dev` → http://localhost:3000
 
 ## Деплой на Vercel
-
-1. Залей репозиторий на GitHub, импортируй в Vercel
-2. Vercel → Settings → Environment Variables: продублируй всё из `.env.local`
+1. Импортируй репозиторий
+2. Env (все опциональны, кроме service role для админки):
+   - `SUPABASE_SERVICE_ROLE_KEY` — включает проверку отчётов, смену ролей, запись ключей
+   - `DEEPSEEK_API_KEY`, `GEMINI_API_KEY` — если не хочешь вводить в /creator
 3. Deploy
-4. Открой `/creator`, вставь ключи DeepSeek и Gemini, сохрани
+
+## Совместимость со старой базой
+- `reports`: пишем/читаем в том же формате, что старый сайт
+  (`id` text, `email`, `date` = «Ник: … | Дата: … | Работа: … | Тип сдачи: … | JSON: …», `status`, `xp`).
+  Легаси-таблица и руководство продолжают видеть заявки.
+- `profiles`: читаем `nickname`, `email`, `role`, `xp`, `total_xp`.
+- `app_settings`: ключи AI (key/value), уже существует.
+
+## Кто Создатель
+Зашит email `daniiltimosin72@gmail.com`. Можно расширить в `app/lib/config.ts`.
 
 ## Безопасность
-
-- `SUPABASE_SERVICE_ROLE_KEY` только в env, никогда в код и не в public.
-- AI-ключи хранятся в таблице `app_settings` и читаются только серверными роутами.
-- RLS включён на всех таблицах. Привилегированные операции (проверка отчётов,
-  смена ролей, настройки) идут через server routes с проверкой роли.
-
-## Структура
-
-- `app/(app)/*` — страницы (профиль, отчёты, руководство, рейтинг, гайд, создатель)
-- `app/api/*` — серверные роуты (ai, settings, reports/review, leaderboard, admin)
-- `app/lib/*` — supabase-клиенты, авторизация, роли, правила
-- `supabase/schema.sql` — вся база + RLS + триггер автосоздания профиля
+- anon/publishable ключ публичный, его держит RLS. Убедись, что RLS включён на таблицах с данными.
+- service role только в env, никогда в код/публику.

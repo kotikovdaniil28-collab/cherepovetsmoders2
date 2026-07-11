@@ -1,5 +1,5 @@
 import "server-only";
-import { supabaseAdmin } from "./supabaseAdmin";
+import { supabaseAdmin } from "./supabaseServer";
 
 export async function getSetting(key: string): Promise<string | null> {
   const db = supabaseAdmin();
