@@ -17,17 +17,20 @@ export function TrainingClient() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-          <GraduationCap className="size-6" /> Обучение
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Тренажёры, викторина недели и квесты. Зарабатывайте XP за правильные решения.
-        </p>
+      <div className="flex items-center gap-3">
+        <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
+          <GraduationCap className="size-5" />
+        </span>
+        <div>
+          <h1 className="font-display text-xl font-bold tracking-tight md:text-2xl">Обучение</h1>
+          <p className="text-muted-foreground text-sm">
+            Тренажёры, викторина недели и квесты — XP за правильные решения
+          </p>
+        </div>
       </div>
 
       <Tabs defaultValue="moderation">
-        <TabsList className="flex-wrap">
+        <TabsList className="h-auto w-full flex-wrap justify-start sm:w-auto">
           <TabsTrigger value="moderation">Тренажёр чата</TabsTrigger>
           <TabsTrigger value="support">Поддержка</TabsTrigger>
           <TabsTrigger value="complaints">Жалобы</TabsTrigger>

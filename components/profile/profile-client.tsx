@@ -2,19 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { UserRound, Award, Zap, FileText, Flame, Pencil, Check } from "lucide-react";
+import { Award, Zap, FileText, Flame, Pencil, Check, Star, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
 import { getSupabase } from "@/lib/supabase/client";
-import { APPROVED_STATUSES, RANKS } from "@/lib/constants";
-import { KV_EMAILS } from "@/lib/constants";
-import { parseReportPayload, reportDayMs, type ReportRow } from "@/lib/reports";
+import { APPROVED_STATUSES, RANKS, KV_EMAILS } from "@/lib/constants";
+import { reportDayMs, type ReportRow } from "@/lib/reports";
 import { levelFromXp } from "@/lib/level";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Reveal } from "@/components/ui/reveal";
+import { VkLinkCard } from "@/components/profile/vk-link-card";
 
 type Career = {
   rank?: string | null;
@@ -22,17 +21,6 @@ type Career = {
   appointed_at?: string | null;
   rank_started_at?: string | null;
 };
-
-function initials(name: string) {
-  return (
-    name
-      .split(/[#_\s.@]+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase())
-      .join("") || "CH"
-  );
-}
 
 function computeStreak(days: number[]): number {
   if (days.length === 0) return 0;
@@ -54,7 +42,7 @@ function computeStreak(days: number[]): number {
 }
 
 export function ProfileClient() {
-  const { user, xp, roles, refreshXp } = useAuth();
+  const { user, xp, roles } = useAuth();
   const [rows, setRows] = useState<ReportRow[]>([]);
   const [career, setCareer] = useState<Career | null>(null);
   const [nickname, setNickname] = useState("");
@@ -102,15 +90,15 @@ export function ProfileClient() {
   };
 
   const stats = useMemo(() => {
-    const approved = rows.filter((r) => APPROVED_STATUSES.has(String(r.status)) || (Number(r.xp) || 0) > 0);
+    const approved = rows.filter(
+      (r) => APPROVED_STATUSES.has(String(r.status)) || (Number(r.xp) || 0) > 0
+    );
     const heroDays = rows.filter((r) => r.status === "Герой дня").length;
-    const overNorm = rows.filter((r) => r.status === "Перенорма").length;
     const days = approved.map((r) => reportDayMs(r)).filter((t) => t > 0);
     return {
       total: rows.length,
       approved: approved.length,
       heroDays,
-      overNorm,
       streak: computeStreak(days),
     };
   }, [rows]);
@@ -130,150 +118,156 @@ export function ProfileClient() {
 
   return (
     <div className="flex flex-col gap-6">
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <Card>
-          <CardContent className="flex flex-wrap items-center gap-5 py-6">
-            <div className="bg-primary text-primary-foreground flex size-16 items-center justify-center rounded-2xl text-xl font-bold">
-              {initials(displayName)}
-            </div>
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
+      {/* Hero профиля */}
+      <Reveal i={0}>
+        <div className="hero-surface rounded-3xl p-5 md:p-8">
+          <div className="flex flex-wrap items-start gap-5">
+            <motion.div
+              whileHover={{ rotate: -4, scale: 1.04 }}
+              className="from-green-bright to-green-deep font-display text-primary-foreground flex size-16 items-center justify-center rounded-2xl bg-linear-to-br text-2xl font-extrabold md:size-[72px]"
+            >
+              {displayName.slice(0, 1).toUpperCase()}
+            </motion.div>
+            <div className="min-w-0 flex-1">
+              <span className="bg-green-bright/16 text-green-bright mb-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] uppercase">
+                <Star className="size-3" /> {rank?.title || roleBadges[0] || "Модератор"}
+              </span>
               <div className="flex flex-wrap items-center gap-2">
                 {editingNick ? (
                   <div className="flex items-center gap-2">
                     <Input
                       value={nickDraft}
                       onChange={(e) => setNickDraft(e.target.value)}
-                      className="h-8 w-48"
+                      className="text-foreground h-9 w-48 bg-white"
                       placeholder="Новый ник"
                     />
-                    <Button size="icon" variant="ghost" onClick={saveNick} aria-label="Сохранить ник">
+                    <Button size="icon" variant="secondary" onClick={saveNick} aria-label="Сохранить ник">
                       <Check className="size-4" />
                     </Button>
                   </div>
                 ) : (
                   <>
-                    <h1 className="truncate text-xl font-semibold">{displayName}</h1>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="size-7"
+                    <h1 className="font-display truncate text-2xl font-extrabold md:text-3xl">
+                      {displayName}
+                    </h1>
+                    <button
+                      className="text-on-hero-soft hover:text-on-hero"
                       onClick={() => {
                         setNickDraft(nickname);
                         setEditingNick(true);
                       }}
                       aria-label="Изменить ник"
                     >
-                      <Pencil className="size-3.5" />
-                    </Button>
+                      <Pencil className="size-4" />
+                    </button>
                   </>
                 )}
               </div>
-              <span className="text-muted-foreground truncate text-sm">{user?.email}</span>
-              <div className="mt-1 flex flex-wrap gap-1.5">
-                {rank && <Badge>{rank.title}</Badge>}
+              <p className="text-on-hero-soft mt-1.5 truncate text-sm">{user?.email}</p>
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
                 {roleBadges.map((b) => (
-                  <Badge key={b} variant="secondary">
+                  <span
+                    key={b}
+                    className="rounded-full bg-[oklch(0.97_0.01_148/0.12)] px-2.5 py-1 text-xs font-semibold"
+                  >
                     {b}
-                  </Badge>
+                  </span>
                 ))}
               </div>
             </div>
-            <div className="flex flex-col items-end gap-1">
-              <span className="text-2xl font-bold tabular-nums">{xp.total} XP</span>
-              <span className="text-muted-foreground text-xs">Уровень {lvl.level}</span>
+            <div className="text-left sm:ml-auto sm:text-right">
+              <div className="font-display text-3xl font-extrabold tabular-nums">
+                <span className="text-green-bright">{xp.total}</span>
+              </div>
+              <div className="text-on-hero-soft text-xs">XP · уровень {lvl.level}</div>
             </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {[
-          { icon: FileText, label: "Отчётов всего", value: stats.total },
-          { icon: Award, label: "Одобрено", value: stats.approved },
-          { icon: Zap, label: "Герой дня", value: stats.heroDays },
-          { icon: Flame, label: "Серия дней", value: stats.streak },
-        ].map((c, i) => (
-          <motion.div
-            key={c.label}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 * (i + 1) }}
-          >
-            <Card>
-              <CardContent className="flex items-center gap-3 p-5">
-                <c.icon className="text-primary size-5" />
-                <div className="flex flex-col">
-                  <span className="text-xl font-semibold tabular-nums">{loading ? "—" : c.value}</span>
-                  <span className="text-muted-foreground text-xs">{c.label}</span>
+          </div>
+          <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-[oklch(0.97_0.01_148/0.1)] md:grid-cols-4">
+            {[
+              { icon: FileText, v: stats.total, k: "отчётов всего" },
+              { icon: Award, v: stats.approved, k: "одобрено" },
+              { icon: Zap, v: stats.heroDays, k: "Героев дня" },
+              { icon: Flame, v: stats.streak, k: "серия дней" },
+            ].map((s) => (
+              <div key={s.k} className="hero-cell px-4 py-3.5">
+                <div className="font-display text-xl font-semibold tabular-nums">
+                  {loading ? "—" : s.v}
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
+                <div className="text-on-hero-soft text-xs">{s.k}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Reveal>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Прогресс уровня</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <Progress value={lvl.progressPct} />
-            <p className="text-muted-foreground text-sm">
-              {lvl.intoLevel} / {lvl.needed} XP до уровня {lvl.level + 1}
+      <div className="grid items-start gap-4 lg:grid-cols-3">
+        {/* Прогресс уровня */}
+        <Reveal i={1} className="bg-card rounded-2xl border p-5">
+          <h3 className="font-display mb-4 flex items-center gap-2 text-sm font-semibold">
+            <Zap className="text-amber-deep size-4" /> Прогресс уровня
+          </h3>
+          <div className="bg-secondary h-[9px] overflow-hidden rounded-full">
+            <span
+              className="bar-grow from-green to-green-bright block h-full rounded-full bg-linear-to-r"
+              style={{ width: `${lvl.progressPct}%` }}
+            />
+          </div>
+          <p className="text-muted-foreground mt-2.5 text-sm">
+            {lvl.intoLevel} / {lvl.needed} XP до уровня {lvl.level + 1}
+          </p>
+          <div className="mt-4 flex flex-col gap-1 text-sm">
+            <div className="flex justify-between py-1">
+              <span className="text-muted-foreground">XP за отчёты</span>
+              <span className="font-display text-xs font-semibold tabular-nums">{xp.reportXp}</span>
+            </div>
+            <div className="flex justify-between border-t py-1 pt-2">
+              <span className="text-muted-foreground">Игры и бонусы</span>
+              <span className="font-display text-xs font-semibold tabular-nums">{xp.gameXp}</span>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* Карьера */}
+        <Reveal i={2} className="bg-card rounded-2xl border p-5">
+          <h3 className="font-display mb-4 flex items-center gap-2 text-sm font-semibold">
+            <UserRound className="text-muted-foreground size-4" /> Карьера
+          </h3>
+          {career?.rank && RANKS[career.rank] ? (
+            <div className="flex flex-col gap-1 text-sm">
+              <div className="flex justify-between py-1.5">
+                <span className="text-muted-foreground">Должность</span>
+                <Badge>{RANKS[career.rank].title}</Badge>
+              </div>
+              {RANKS[career.rank].next && (
+                <div className="flex justify-between border-t py-1.5 pt-2.5">
+                  <span className="text-muted-foreground">Следующий ранг</span>
+                  <span className="font-semibold">{RANKS[career.rank].next}</span>
+                </div>
+              )}
+              {career.rank_started_at && (
+                <div className="flex justify-between border-t py-1.5 pt-2.5">
+                  <span className="text-muted-foreground">В ранге с</span>
+                  <span>{new Date(career.rank_started_at).toLocaleDateString("ru-RU")}</span>
+                </div>
+              )}
+              {career.appointed_at && (
+                <div className="flex justify-between border-t py-1.5 pt-2.5">
+                  <span className="text-muted-foreground">В команде с</span>
+                  <span>{new Date(career.appointed_at).toLocaleDateString("ru-RU")}</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-muted-foreground py-4 text-center text-sm">
+              Карьерная запись не найдена. Обратитесь к руководству.
             </p>
-            <div className="text-sm">
-              <div className="flex justify-between py-1">
-                <span className="text-muted-foreground">XP за отчёты</span>
-                <span className="tabular-nums">{xp.reportXp}</span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span className="text-muted-foreground">XP за игры и бонусы</span>
-                <span className="tabular-nums">{xp.gameXp}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          )}
+        </Reveal>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <UserRound className="size-4" /> Карьера
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2 text-sm">
-            {career?.rank && RANKS[career.rank] ? (
-              <>
-                <div className="flex justify-between py-1">
-                  <span className="text-muted-foreground">Должность</span>
-                  <span className="font-medium">{RANKS[career.rank].title}</span>
-                </div>
-                {RANKS[career.rank].next && (
-                  <div className="flex justify-between py-1">
-                    <span className="text-muted-foreground">Следующий ранг</span>
-                    <span>{RANKS[career.rank].next}</span>
-                  </div>
-                )}
-                {career.rank_started_at && (
-                  <div className="flex justify-between py-1">
-                    <span className="text-muted-foreground">В ранге с</span>
-                    <span>{new Date(career.rank_started_at).toLocaleDateString("ru-RU")}</span>
-                  </div>
-                )}
-                {career.appointed_at && (
-                  <div className="flex justify-between py-1">
-                    <span className="text-muted-foreground">В команде с</span>
-                    <span>{new Date(career.appointed_at).toLocaleDateString("ru-RU")}</span>
-                  </div>
-                )}
-              </>
-            ) : (
-              <p className="text-muted-foreground py-4 text-center">
-                Карьерная запись не найдена. Обратитесь к руководству.
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        {/* VK-бот */}
+        <Reveal i={3}>
+          <VkLinkCard />
+        </Reveal>
       </div>
     </div>
   );

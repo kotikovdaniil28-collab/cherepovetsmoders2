@@ -21,7 +21,7 @@ import {
   logPurchase,
   type ShopItem,
 } from "@/lib/shop";
-import { Card, CardContent } from "@/components/ui/card";
+import { Reveal } from "@/components/ui/reveal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,38 +32,47 @@ function ItemCard({
   onBuy,
   busy,
   currency,
+  index,
 }: {
   item: ShopItem;
   balance: number;
   onBuy: (item: ShopItem) => void;
   busy: boolean;
   currency: string;
+  index: number;
 }) {
   const affordable = balance >= item.price;
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} layout>
-      <Card className="h-full transition-shadow hover:shadow-md">
-        <CardContent className="flex h-full flex-col gap-3 p-5">
-          <div className="flex items-start justify-between">
-            <span aria-hidden className="text-3xl">
-              {item.icon}
-            </span>
-            {item.custom && <Badge variant="secondary">Особый</Badge>}
-          </div>
-          <div className="flex flex-1 flex-col gap-1">
-            <h3 className="text-sm font-semibold text-pretty">{item.title}</h3>
-            <p className="text-muted-foreground text-xs leading-relaxed">{item.desc}</p>
-          </div>
-          <Button
-            size="sm"
-            variant={affordable ? "default" : "outline"}
-            disabled={!affordable || busy}
-            onClick={() => onBuy(item)}
+    <motion.div
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0, transition: { delay: Math.min(index * 0.05, 0.4) } }}
+      layout
+      whileHover={{ y: -3 }}
+    >
+      <div className="bg-card border-border/60 hover:border-primary/40 flex h-full flex-col gap-3 rounded-2xl border p-4 transition-colors md:p-5">
+        <div className="flex items-start justify-between">
+          <span
+            aria-hidden
+            className="bg-primary/10 flex size-11 items-center justify-center rounded-xl text-2xl"
           >
-            {item.price} {currency}
-          </Button>
-        </CardContent>
-      </Card>
+            {item.icon}
+          </span>
+          {item.custom && <Badge variant="secondary">Особый</Badge>}
+        </div>
+        <div className="flex flex-1 flex-col gap-1">
+          <h3 className="text-sm font-semibold text-pretty">{item.title}</h3>
+          <p className="text-muted-foreground text-xs leading-relaxed">{item.desc}</p>
+        </div>
+        <Button
+          size="sm"
+          variant={affordable ? "default" : "outline"}
+          disabled={!affordable || busy}
+          onClick={() => onBuy(item)}
+          className="tabular-nums"
+        >
+          {item.price} {currency}
+        </Button>
+      </div>
     </motion.div>
   );
 }
@@ -139,81 +148,91 @@ export function ShopClient() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-          <ShoppingBag className="size-6" /> Магазин
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Покупки за XP и баллы. После покупки предмет выдаёт руководство.
-        </p>
-      </div>
-
-      <Tabs defaultValue="mod">
-        <TabsList>
-          <TabsTrigger value="mod">
-            <Zap className="size-4" /> Модерация · {xp.total} XP
-          </TabsTrigger>
-          {showAp && (
-            <TabsTrigger value="ap">
-              <Coins className="size-4" /> АП · {apPoints} баллов
-            </TabsTrigger>
-          )}
-          {showFsb && (
-            <TabsTrigger value="fsb">
-              <ShieldHalf className="size-4" /> ФСБ · {fsbPoints} баллов
-            </TabsTrigger>
-          )}
-        </TabsList>
-
-        <TabsContent value="mod">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {modItems.map((item) => (
-              <ItemCard
-                key={item.id}
-                item={item}
-                balance={xp.total}
-                busy={busy}
-                currency="XP"
-                onBuy={(i) => buy(i, "mod")}
-              />
-            ))}
+      <Reveal>
+        <div className="flex items-center gap-3">
+          <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
+            <ShoppingBag className="size-5" />
+          </span>
+          <div>
+            <h1 className="font-display text-xl font-bold tracking-tight md:text-2xl">Магазин</h1>
+            <p className="text-muted-foreground text-sm">
+              Покупки за XP и баллы — предмет выдаёт руководство
+            </p>
           </div>
-        </TabsContent>
+        </div>
+      </Reveal>
 
-        {showAp && (
-          <TabsContent value="ap">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {apItems.map((item) => (
+      <Reveal delay={0.05}>
+        <Tabs defaultValue="mod">
+          <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
+            <TabsTrigger value="mod">
+              <Zap className="size-4" /> Модерация · {xp.total} XP
+            </TabsTrigger>
+            {showAp && (
+              <TabsTrigger value="ap">
+                <Coins className="size-4" /> АП · {apPoints} баллов
+              </TabsTrigger>
+            )}
+            {showFsb && (
+              <TabsTrigger value="fsb">
+                <ShieldHalf className="size-4" /> ФСБ · {fsbPoints} баллов
+              </TabsTrigger>
+            )}
+          </TabsList>
+
+          <TabsContent value="mod">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {modItems.map((item, i) => (
                 <ItemCard
                   key={item.id}
                   item={item}
-                  balance={apPoints}
+                  index={i}
+                  balance={xp.total}
                   busy={busy}
-                  currency="баллов"
-                  onBuy={(i) => buy(i, "ap")}
+                  currency="XP"
+                  onBuy={(it) => buy(it, "mod")}
                 />
               ))}
             </div>
           </TabsContent>
-        )}
 
-        {showFsb && (
-          <TabsContent value="fsb">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {fsbItems.map((item) => (
-                <ItemCard
-                  key={item.id}
-                  item={item}
-                  balance={fsbPoints}
-                  busy={busy}
-                  currency="баллов"
-                  onBuy={(i) => buy(i, "fsb")}
-                />
-              ))}
-            </div>
-          </TabsContent>
-        )}
-      </Tabs>
+          {showAp && (
+            <TabsContent value="ap">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {apItems.map((item, i) => (
+                  <ItemCard
+                    key={item.id}
+                    item={item}
+                    index={i}
+                    balance={apPoints}
+                    busy={busy}
+                    currency="баллов"
+                    onBuy={(it) => buy(it, "ap")}
+                  />
+                ))}
+              </div>
+            </TabsContent>
+          )}
+
+          {showFsb && (
+            <TabsContent value="fsb">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {fsbItems.map((item, i) => (
+                  <ItemCard
+                    key={item.id}
+                    item={item}
+                    index={i}
+                    balance={fsbPoints}
+                    busy={busy}
+                    currency="баллов"
+                    onBuy={(it) => buy(it, "fsb")}
+                  />
+                ))}
+              </div>
+            </TabsContent>
+          )}
+        </Tabs>
+      </Reveal>
     </div>
   );
 }

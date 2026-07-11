@@ -25,17 +25,22 @@ export function AdminClient() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-          <ShieldCheck className="size-6" /> Администрирование
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Пользователи, роли, выдача покупок, товары и инструкции.
-        </p>
+      <div className="flex items-center gap-3">
+        <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
+          <ShieldCheck className="size-5" />
+        </span>
+        <div>
+          <h1 className="font-display text-xl font-bold tracking-tight md:text-2xl">
+            Администрирование
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Пользователи, роли, выдача покупок, товары и инструкции
+          </p>
+        </div>
       </div>
 
       <Tabs defaultValue="users">
-        <TabsList>
+        <TabsList className="h-auto w-full flex-wrap justify-start sm:w-auto">
           <TabsTrigger value="users">Пользователи</TabsTrigger>
           <TabsTrigger value="purchases">Покупки</TabsTrigger>
           <TabsTrigger value="shop">Товары</TabsTrigger>

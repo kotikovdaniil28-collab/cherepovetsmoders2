@@ -99,13 +99,16 @@ export function HelpClient() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-          <BookOpen className="size-6" /> Инструкция
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Правила и инструкции команды модерации Cherepovets 89.
-        </p>
+      <div className="flex items-center gap-3">
+        <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
+          <BookOpen className="size-5" />
+        </span>
+        <div>
+          <h1 className="font-display text-xl font-bold tracking-tight md:text-2xl">Инструкция</h1>
+          <p className="text-muted-foreground text-sm">
+            Правила и инструкции команды модерации Cherepovets 89
+          </p>
+        </div>
       </div>
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>

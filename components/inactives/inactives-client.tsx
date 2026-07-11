@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CalendarOff, Check, X } from "lucide-react";
+import { CalendarOff, Check, X, Send } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
 import { getSupabase } from "@/lib/supabase/client";
 import { KV } from "@/lib/constants";
 import { makeId, type ReportRow } from "@/lib/reports";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Reveal } from "@/components/ui/reveal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -122,21 +122,24 @@ export function InactivesClient() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Неактивы</h1>
-        <p className="text-muted-foreground text-sm">
-          Заявка на отсутствие. Руководство одобряет или отклоняет.
-        </p>
-      </div>
+      <Reveal>
+        <div className="flex items-center gap-3">
+          <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
+            <CalendarOff className="size-5" />
+          </span>
+          <div>
+            <h1 className="font-display text-xl font-bold tracking-tight md:text-2xl">Неактивы</h1>
+            <p className="text-muted-foreground text-sm">
+              Заявка на отсутствие — руководство одобрит или отклонит
+            </p>
+          </div>
+        </div>
+      </Reveal>
 
       <div className="grid gap-6 lg:grid-cols-5">
-        <Card className="lg:col-span-2 h-fit">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <CalendarOff className="size-4" /> Подать заявку
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <Reveal delay={0.05} className="lg:col-span-2">
+          <div className="bg-card border-border/60 h-fit rounded-2xl border p-4 md:p-5">
+            <h2 className="mb-4 text-sm font-semibold">Подать заявку</h2>
             <form onSubmit={submit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="ina-nick">Игровой ник</Label>
@@ -163,41 +166,50 @@ export function InactivesClient() {
                   required
                 />
               </div>
-              <Button type="submit" disabled={saving}>
+              <Button type="submit" disabled={saving} className="gap-2">
+                <Send className="size-4" />
                 {saving ? "Отправка..." : "Отправить"}
               </Button>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </Reveal>
 
         <div className="flex flex-col gap-3 lg:col-span-3">
-          <h2 className="text-sm font-medium">
-            {isLeader ? "Все заявки" : "Мои заявки"}
-          </h2>
-          {loading && <p className="text-muted-foreground text-sm">Загрузка...</p>}
+          <Reveal delay={0.1}>
+            <h2 className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+              {isLeader ? "Все заявки" : "Мои заявки"}
+            </h2>
+          </Reveal>
+          {loading && (
+            <div className="flex flex-col gap-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="bg-card border-border/60 h-24 animate-pulse rounded-2xl border" />
+              ))}
+            </div>
+          )}
           {!loading && rows.length === 0 && (
             <p className="text-muted-foreground text-sm">Заявок пока нет.</p>
           )}
           <AnimatePresence>
-            {rows.map((r) => {
+            {rows.map((r, i) => {
               const p = parseInactive(r);
               const pending = r.status === "Ожидает одобрения";
               return (
                 <motion.div
                   key={r.id}
                   layout
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0, transition: { delay: Math.min(i * 0.04, 0.3) } }}
+                  exit={{ opacity: 0, scale: 0.97 }}
                 >
-                  <Card>
-                    <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
-                      <div>
-                        <CardTitle className="text-sm">{p.nick}</CardTitle>
-                        <CardDescription>
+                  <div className="bg-card border-border/60 rounded-2xl border p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">{p.nick}</p>
+                        <p className="text-muted-foreground text-xs">
                           {p.from} — {p.to}
                           {isLeader && r.link ? ` · ${r.link}` : ""}
-                        </CardDescription>
+                        </p>
                       </div>
                       <Badge
                         variant={
@@ -206,8 +218,8 @@ export function InactivesClient() {
                       >
                         {String(r.status)}
                       </Badge>
-                    </CardHeader>
-                    <CardContent className="flex items-center justify-between gap-3">
+                    </div>
+                    <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <p className="text-muted-foreground text-sm">{p.reason}</p>
                       {isLeader && pending && (
                         <div className="flex shrink-0 gap-2">
@@ -229,8 +241,8 @@ export function InactivesClient() {
                           </Button>
                         </div>
                       )}
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 </motion.div>
               );
             })}

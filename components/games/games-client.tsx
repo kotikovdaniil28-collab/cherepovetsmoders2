@@ -104,35 +104,40 @@ export function GamesClient() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-          <Gamepad2 className="size-6" /> Игры
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Ваш баланс: <span className="text-foreground font-semibold">{xp.total} XP</span>. Ставка
-          списывается при запуске игры.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
+            <Gamepad2 className="size-5" />
+          </span>
+          <div>
+            <h1 className="font-display text-xl font-bold tracking-tight md:text-2xl">Игры</h1>
+            <p className="text-muted-foreground text-sm">Ставка списывается при запуске игры</p>
+          </div>
+        </div>
+        <div className="bg-primary/10 text-primary rounded-xl px-4 py-2 text-sm font-bold tabular-nums">
+          {xp.total} XP
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {GAMES.map((g, i) => (
           <motion.button
             key={g.id}
             type="button"
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.04 }}
-            whileHover={{ y: -4 }}
-            whileTap={{ scale: 0.97 }}
+            transition={{ delay: i * 0.05, type: "spring", stiffness: 260, damping: 22 }}
+            whileHover={{ y: -4, scale: 1.02 }}
+            whileTap={{ scale: 0.96 }}
             onClick={() => openGame(g.id, g.cost)}
             disabled={paying}
             className="text-left"
           >
-            <Card className="h-full cursor-pointer transition-shadow hover:shadow-md">
-              <CardContent className="flex h-full flex-col gap-2 p-5">
+            <Card className="hover:border-primary/40 h-full cursor-pointer rounded-2xl transition-colors">
+              <CardContent className="flex h-full flex-col gap-2 p-4 md:p-5">
                 <span
                   aria-hidden
-                  className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg"
+                  className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-xl"
                 >
                   <g.icon className="size-5" />
                 </span>

@@ -54,12 +54,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Гарантирует наличие строки user_stats с ником из метаданных.
   // Запись выполняется на сервере (service role), т.к. RLS запрещает клиентские записи.
-  const ensureStatsRow = useCallback(async (u: User | null) => {
-    if (!u) return;
+  // ВАЖНО: токен передаётся аргументом — вызывать auth.getSession() внутри
+  // onAuthStateChange нельзя (дедлок supabase-js).
+  const ensureStatsRow = useCallback(async (token: string | null | undefined) => {
+    if (!token) return;
     try {
-      const { data: sessionData } = await getSupabase().auth.getSession();
-      const token = sessionData.session?.access_token;
-      if (!token) return;
       await fetch("/api/profile/bootstrap", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -85,27 +84,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const supa = getSupabase();
     let mounted = true;
+    let bootstrapped = false;
 
-    supa.auth.getSession().then(async ({ data }) => {
-      if (!mounted) return;
-      const u = data.session?.user ?? null;
-      setUser(u);
-      await ensureStatsRow(u);
-      await Promise.all([loadRoles(u), loadXp(u)]);
-      if (mounted) setLoading(false);
-    });
-
-    const { data: sub } = supa.auth.onAuthStateChange(async (_event, session) => {
+    // Единственный источник истины — onAuthStateChange: он сразу выдаёт
+    // INITIAL_SESSION (в отличие от getSession, который может зависнуть
+    // на navigator.locks). Внутри колбэка нельзя await-ить supabase-запросы
+    // (дедлок supabase-js), поэтому вся загрузка уходит в setTimeout.
+    const { data: sub } = supa.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       const u = session?.user ?? null;
       setUser(u);
-      await ensureStatsRow(u);
-      await Promise.all([loadRoles(u), loadXp(u)]);
-      if (mounted) setLoading(false);
+      void ensureStatsRow(session?.access_token);
+      if (event === "TOKEN_REFRESHED" && bootstrapped) return;
+      bootstrapped = true;
+      setTimeout(async () => {
+        if (!mounted) return;
+        await Promise.all([loadRoles(u), loadXp(u)]);
+        if (mounted) setLoading(false);
+      }, 0);
     });
+
+    // Страховка: если INITIAL_SESSION по какой-то причине не пришёл,
+    // не держим пользователя на экране загрузки дольше 4 секунд.
+    const failsafe = setTimeout(() => {
+      if (mounted && !bootstrapped) {
+        setLoading(false);
+      }
+    }, 4000);
 
     return () => {
       mounted = false;
+      clearTimeout(failsafe);
       sub.subscription.unsubscribe();
     };
   }, [loadRoles, loadXp, ensureStatsRow]);

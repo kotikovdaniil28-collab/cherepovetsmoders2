@@ -15,6 +15,7 @@ export type ReportPayload = {
   nick: string;
   day: string;
   work: string;
+  quality: string;
   proofs: string[];
   json: Record<string, unknown>;
 };
@@ -32,7 +33,14 @@ export function parseReportPayload(row: ReportRow): ReportPayload {
   const proofs: string[] = [];
   const jsonProofs = json.proofs || json.screenshots || json.images;
   if (Array.isArray(jsonProofs)) {
-    for (const p of jsonProofs) if (typeof p === "string" && p.trim()) proofs.push(p.trim());
+    for (const p of jsonProofs) {
+      // Сайт хранит строки, VK-бот — объекты вида { url, type, ... }
+      if (typeof p === "string" && p.trim()) proofs.push(p.trim());
+      else if (p && typeof p === "object") {
+        const u = String((p as Record<string, unknown>).url || (p as Record<string, unknown>).link || "").trim();
+        if (u) proofs.push(u);
+      }
+    }
   } else if (typeof jsonProofs === "string" && jsonProofs.trim()) {
     proofs.push(...jsonProofs.split(/[\n,;]+/).map((s) => s.trim()).filter(Boolean));
   }
@@ -43,26 +51,51 @@ export function parseReportPayload(row: ReportRow): ReportPayload {
     nick: String(json.nick || json.nickname || pick(/Ник:\s*([^|]+)/i) || row.email || "Модератор"),
     day: String(json.date || json.day || pick(/Дата:\s*([\d-]+)/i) || "—"),
     work: String(json.work || json.comment || pick(/Работа:\s*([^|]+)/i) || "—"),
+    quality: String(json.quality || json.requestedStatus || pick(/Тип\s*сдачи:\s*([^|]+)/i) || ""),
     proofs,
     json,
   };
 }
 
+// Сериализация в формате VK-бота, чтобы бот и сайт читали отчёты одинаково:
+// "Ник: X | Дата: Y | Работа: Z | Тип сдачи: Q | Доказательства: N | JSON: {...}"
 export function serializeReportPayload(input: {
   nick: string;
   day: string;
   work: string;
+  quality?: string;
   proofs?: string[];
+  userId?: string;
+  email?: string;
   extra?: Record<string, unknown>;
 }): string {
+  const proofs = input.proofs || [];
+  const quality = input.quality || "Норма";
   const json = {
+    version: "site_v60",
+    source: "site",
     nick: input.nick,
-    date: input.day,
+    nickname: input.nick,
     work: input.work,
-    proofs: input.proofs || [],
+    comment: input.work,
+    date: input.day,
+    day: input.day,
+    quality,
+    requestedStatus: quality,
+    proofs,
+    ...(input.userId ? { userId: input.userId } : {}),
+    ...(input.email ? { email: input.email } : {}),
+    createdIso: new Date().toISOString(),
     ...(input.extra || {}),
   };
-  return `Ник: ${input.nick} | Дата: ${input.day} | JSON: ${JSON.stringify(json)}`;
+  return (
+    `Ник: ${input.nick} | ` +
+    `Дата: ${input.day} | ` +
+    `Работа: ${input.work} | ` +
+    `Тип сдачи: ${quality} | ` +
+    `Доказательства: ${proofs.length} | ` +
+    `JSON: ${JSON.stringify(json)}`
+  );
 }
 
 export function reportDayMs(row: ReportRow): number {

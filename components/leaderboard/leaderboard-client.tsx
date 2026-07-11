@@ -7,8 +7,9 @@ import { useAuth } from "@/components/auth-provider";
 import { getSupabase } from "@/lib/supabase/client";
 import { computeLeaderboard } from "@/lib/xp";
 import { levelFromXp } from "@/lib/level";
-import { Card, CardContent } from "@/components/ui/card";
+import { Reveal } from "@/components/ui/reveal";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 type Entry = {
   email: string;
@@ -66,18 +67,33 @@ export function LeaderboardClient() {
   const myEmail = (user?.email || "").toLowerCase();
 
   const podiumIcons = [Crown, Medal, Medal];
-  const podiumColors = ["text-amber-500", "text-zinc-400", "text-amber-700"];
+  const podiumStyle = [
+    "text-chart-4 bg-chart-4/10",
+    "text-muted-foreground bg-muted",
+    "text-chart-5 bg-chart-5/10",
+  ];
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-          <Trophy className="size-6 text-amber-500" /> Лидерборд
-        </h1>
-        <p className="text-muted-foreground text-sm">Рейтинг модераторов по суммарному XP.</p>
-      </div>
+      <Reveal>
+        <div className="flex items-center gap-3">
+          <span className="bg-chart-4/15 text-chart-4 flex size-10 shrink-0 items-center justify-center rounded-xl">
+            <Trophy className="size-5" />
+          </span>
+          <div>
+            <h1 className="font-display text-xl font-bold tracking-tight md:text-2xl">Лидерборд</h1>
+            <p className="text-muted-foreground text-sm">Рейтинг модераторов по суммарному XP</p>
+          </div>
+        </div>
+      </Reveal>
 
-      {loading && <p className="text-muted-foreground py-10 text-center text-sm">Загрузка...</p>}
+      {loading && (
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="bg-card border-border/60 h-40 animate-pulse rounded-2xl border" />
+          ))}
+        </div>
+      )}
 
       {!loading && (
         <>
@@ -85,28 +101,44 @@ export function LeaderboardClient() {
             {top3.map((e, i) => {
               const Icon = podiumIcons[i];
               const lvl = levelFromXp(e.xp);
+              const isMe = e.email.toLowerCase() === myEmail;
               return (
                 <motion.div
                   key={e.email}
-                  initial={{ opacity: 0, y: 20, scale: 0.96 }}
+                  initial={{ opacity: 0, y: 24, scale: 0.94 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }}
+                  transition={{ delay: i * 0.12, type: "spring", stiffness: 220, damping: 20 }}
                 >
-                  <Card className={i === 0 ? "border-amber-500/40 shadow-md" : ""}>
-                    <CardContent className="flex flex-col items-center gap-2 py-6">
-                      <Icon className={`size-8 ${podiumColors[i]}`} />
-                      <span className="text-lg font-semibold">{e.nickname}</span>
-                      <span className="text-muted-foreground text-xs">Уровень {lvl.level}</span>
-                      <Badge variant={i === 0 ? "default" : "secondary"}>{e.xp} XP</Badge>
-                    </CardContent>
-                  </Card>
+                  <div
+                    className={cn(
+                      "bg-card border-border/60 relative overflow-hidden rounded-2xl border p-5",
+                      i === 0 && "border-chart-4/50 shadow-lg"
+                    )}
+                  >
+                    {i === 0 && (
+                      <div className="bg-chart-4/10 pointer-events-none absolute -top-10 -right-10 size-32 rounded-full blur-2xl" />
+                    )}
+                    <div className="flex flex-col items-center gap-2 text-center">
+                      <span className={cn("flex size-12 items-center justify-center rounded-2xl", podiumStyle[i])}>
+                        <Icon className="size-6" />
+                      </span>
+                      <span className="text-base font-bold">
+                        {e.nickname}
+                        {isMe && <span className="text-primary ml-1 text-xs">(вы)</span>}
+                      </span>
+                      <span className="text-muted-foreground text-xs">Уровень {lvl.level} · #{e.rank}</span>
+                      <Badge variant={i === 0 ? "default" : "secondary"} className="tabular-nums">
+                        {e.xp} XP
+                      </Badge>
+                    </div>
+                  </div>
                 </motion.div>
               );
             })}
           </div>
 
-          <Card>
-            <CardContent className="flex flex-col p-0">
+          <Reveal delay={0.2}>
+            <div className="bg-card border-border/60 flex flex-col overflow-hidden rounded-2xl border">
               {rest.map((e, i) => {
                 const isMe = e.email.toLowerCase() === myEmail;
                 return (
@@ -115,14 +147,15 @@ export function LeaderboardClient() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: Math.min(i * 0.03, 0.5) }}
-                    className={`border-border/40 flex items-center gap-4 border-b px-5 py-3 last:border-0 ${
-                      isMe ? "bg-primary/5" : ""
-                    }`}
+                    className={cn(
+                      "border-border/40 flex items-center gap-3 border-b px-4 py-3 last:border-0 md:px-5",
+                      isMe && "bg-primary/5"
+                    )}
                   >
-                    <span className="text-muted-foreground w-8 text-right text-sm tabular-nums">
+                    <span className="text-muted-foreground w-7 shrink-0 text-right text-sm font-semibold tabular-nums">
                       {e.rank}
                     </span>
-                    <span className="flex-1 text-sm font-medium">
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium">
                       {e.nickname}
                       {isMe && (
                         <Badge variant="outline" className="ml-2">
@@ -130,16 +163,20 @@ export function LeaderboardClient() {
                         </Badge>
                       )}
                     </span>
-                    <span className="text-muted-foreground text-xs">Ур. {levelFromXp(e.xp).level}</span>
-                    <span className="w-20 text-right text-sm font-semibold tabular-nums">{e.xp} XP</span>
+                    <span className="text-muted-foreground hidden text-xs sm:block">
+                      Ур. {levelFromXp(e.xp).level}
+                    </span>
+                    <span className="w-20 shrink-0 text-right text-sm font-semibold tabular-nums">
+                      {e.xp} XP
+                    </span>
                   </motion.div>
                 );
               })}
               {entries.length === 0 && (
                 <p className="text-muted-foreground py-10 text-center text-sm">Пока нет данных.</p>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </Reveal>
         </>
       )}
     </div>

@@ -1,16 +1,29 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Manrope, Unbounded, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin", "cyrillic"], variable: "--font-inter" });
+const manrope = Manrope({ subsets: ["latin", "cyrillic"], variable: "--font-manrope" });
+const unbounded = Unbounded({
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-unbounded",
+  weight: ["400", "600", "800"],
+});
 const mono = JetBrains_Mono({ subsets: ["latin", "cyrillic"], variable: "--font-jbmono" });
 
 export const metadata: Metadata = {
-  title: "CHEREPOVETS Moderation",
+  title: "CHEREPOVETS · Модерация",
   description: "Рабочая панель модерации CHEREPOVETS",
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f5f8f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#131a15" },
+  ],
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -19,11 +32,15 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="ru" suppressHydrationWarning className={`bg-background ${inter.variable} ${mono.variable}`}>
+    <html
+      lang="ru"
+      suppressHydrationWarning
+      className={`bg-background ${manrope.variable} ${unbounded.variable} ${mono.variable}`}
+    >
       <body className="font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           {children}
-          <Toaster richColors position="top-right" />
+          <Toaster richColors position="top-center" />
         </ThemeProvider>
       </body>
     </html>
