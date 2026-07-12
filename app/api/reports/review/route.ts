@@ -68,8 +68,13 @@ function parsePayload(row: ReportRow) {
   };
 }
 
+// Убираем случайные кавычки/пробелы, попавшие в значение при вставке
+function vkToken() {
+  return String(process.env.VK_GROUP_TOKEN || "").trim().replace(/^['"]+|['"]+$/g, "");
+}
+
 async function vkApi(method: string, params: Record<string, string | number>) {
-  const token = process.env.VK_GROUP_TOKEN;
+  const token = vkToken();
   if (!token) throw new Error("VK_GROUP_TOKEN is not configured");
   const body = new URLSearchParams({
     ...Object.fromEntries(Object.entries(params).map(([key, value]) => [key, String(value)])),
@@ -166,7 +171,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Без VK_GROUP_TOKEN оставляем 'waiting' — бот сам доставит вердикт в ЛС
-    const hasVkToken = Boolean(process.env.VK_GROUP_TOKEN);
+    const hasVkToken = Boolean(vkToken());
     let notificationStatus = vkUserId ? (hasVkToken ? "failed" : "waiting") : "not_linked";
     let notificationError = vkUserId ? "" : "VK не привязан";
     if (vkUserId && hasVkToken) {
@@ -228,8 +233,12 @@ export async function POST(request: NextRequest) {
           keyboard: JSON.stringify({ inline: true, buttons: [] }),
           ...(oldReview.staff_attachments ? { attachment: oldReview.staff_attachments } : {})
         });
-      } catch {
-        // The site decision stays valid even if an old VK card can no longer be edited.
+      } catch (editError) {
+        // Решение на сайте остаётся в силе, даже если старую VK-карточку уже нельзя отредактировать
+        console.warn(
+          "vk card edit failed:",
+          editError instanceof Error ? editError.message : editError,
+        );
       }
     }
 

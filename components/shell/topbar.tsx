@@ -8,6 +8,7 @@ import { useTheme } from "next-themes";
 import { Moon, Sun, LogOut, Zap, ShieldCheck, Gamepad2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { NAV_ITEMS, visibleItems } from "@/components/shell/nav-items";
+import { NotificationsBell } from "@/components/shell/notifications-bell";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -191,6 +192,8 @@ export function Topbar() {
             <Gamepad2 className="text-green-deep size-3.5" />
             <span className="font-display text-xs font-semibold tabular-nums">{xp.gameXp}</span>
           </span>
+
+          <NotificationsBell />
 
           <button
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}

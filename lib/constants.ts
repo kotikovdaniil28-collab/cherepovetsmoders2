@@ -82,6 +82,7 @@ export const SERVICE_EMAILS = [
   "GOSS_SHOP_ITEMS_V26",
   "GOSS_SHOP_PURCHASE",
   "FSB_SHOP_LOG",
+  "NOTIF_SEEN_V1",
 ];
 
 export const KV_EMAILS = new Set<string>(SERVICE_EMAILS);

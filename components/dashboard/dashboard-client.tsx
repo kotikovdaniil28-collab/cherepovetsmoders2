@@ -25,6 +25,7 @@ import { reportDayMs, type ReportRow } from "@/lib/reports";
 import { levelFromXp } from "@/lib/level";
 import { buildPromotionTrack } from "@/lib/promotion";
 import { Reveal, SecHead } from "@/components/ui/reveal";
+import { AchievementsGrid } from "@/components/dashboard/achievements-grid";
 import { CountUp } from "@/components/ui/count-up";
 
 const NeonScene = dynamic(
@@ -333,6 +334,46 @@ export function DashboardClient() {
                   </span>
                   <span className="font-display">{Math.round(promo.progress * 100)}%</span>
                 </div>
+
+                {/* Прогресс по отчётам на текущем ранге */}
+                {promo.rules && (
+                  <>
+                    <div className="bg-secondary relative mt-3 h-[9px] overflow-hidden rounded-full">
+                      <span
+                        className="bar-grow from-amber-deep to-amber block h-full rounded-full bg-linear-to-r"
+                        style={{
+                          width: `${Math.min(100, Math.round((promo.approvedCount / promo.rules.regularReports) * 100))}%`,
+                        }}
+                      />
+                    </div>
+                    <div className="text-muted-foreground mt-2.5 flex justify-between text-xs font-semibold">
+                      <span>
+                        {promo.approvedCount} / {promo.rules.regularReports} одобренных отчётов
+                      </span>
+                      <span className="font-display">
+                        {Math.min(100, Math.round((promo.approvedCount / promo.rules.regularReports) * 100))}%
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                {/* Сводка: сколько осталось до повышения */}
+                {promo.rules && !promo.eligibleRegular && (
+                  <p className="bg-secondary text-foreground mt-3 rounded-xl px-3 py-2 text-xs font-semibold">
+                    До повышения:{" "}
+                    {Math.max(0, promo.rules.regularDays - promo.daysOnRank) > 0 && (
+                      <>ещё <b>{Math.max(0, promo.rules.regularDays - promo.daysOnRank)} дн.</b></>
+                    )}
+                    {Math.max(0, promo.rules.regularDays - promo.daysOnRank) > 0 &&
+                      Math.max(0, promo.rules.regularReports - promo.approvedCount) > 0 &&
+                      " и "}
+                    {Math.max(0, promo.rules.regularReports - promo.approvedCount) > 0 && (
+                      <><b>{Math.max(0, promo.rules.regularReports - promo.approvedCount)} отчётов</b></>
+                    )}
+                    {" "}— или ускоренно: {Math.max(0, promo.rules.earlyDays - promo.daysOnRank)} дн. и{" "}
+                    {Math.max(0, promo.rules.earlyHigh - promo.highCount)} Перенорм/Героев
+                  </p>
+                )}
                 <p className="text-muted-foreground mt-3 text-xs">
                   Решение о повышении принимает руководство — бот присылает уведомление в STAFF,
                   когда срок подходит.
@@ -394,6 +435,12 @@ export function DashboardClient() {
                 </div>
               </div>
             </div>
+          </Reveal>
+
+          {/* Достижения */}
+          <Reveal i={3}>
+            <SecHead title="Достижения" hint="бейджи за отчёты и дисциплину" />
+            <AchievementsGrid rows={rows} daysOnRank={daysOnRank} modXp={xp.modXp} />
           </Reveal>
 
           {/* Неделя */}
