@@ -41,6 +41,7 @@ const CAREER_RANKS = Object.freeze({
   km: { title: 'Куратор модерации', short: 'КМ', next: '' },
   zgm: { title: 'Заместитель главного модератора', short: 'ЗГМ', next: '' },
   gm: { title: 'Главный модератор', short: 'ГМ', next: '' },
+  kgm: { title: 'Куратор главных модераторов', short: 'КГМ', next: '' },
 });
 const SHEET_POSITION_TO_RANK = Object.freeze({
   'ММ': 'junior_moderator',
@@ -49,6 +50,7 @@ const SHEET_POSITION_TO_RANK = Object.freeze({
   'КМ': 'km',
   'ЗГМ': 'zgm',
   'ГМ': 'gm',
+  'КГМ': 'kgm',
 });
 const RANK_TO_SHEET_POSITION = Object.freeze({
   junior_moderator: 'ММ',
@@ -57,6 +59,7 @@ const RANK_TO_SHEET_POSITION = Object.freeze({
   km: 'КМ',
   zgm: 'ЗГМ',
   gm: 'ГМ',
+  kgm: 'КГМ',
 });
 const AI_MAX_OUTPUT_CHARS = 6000;
 const AI_MEMORY_LIMIT = 16;
@@ -111,7 +114,7 @@ const DISCORD_RULES = {
   '2.20': ['Общие правила', 'Многократное нарушение правил Discord-сервера: более пяти блокировок чатов или трёх строгих предупреждений за 7 дней.', 'Бан 7-15 дней / Перманентная блокировка'],
   '2.21': ['Общие правила', 'Создание приватных комнат с названиями, нарушающими правила Discord-серверов и проекта.', 'Бан создания приватных комнат 3-7 дней'],
   '3.1': ['Текстовые каналы', 'Флуд, спам и сообщения не по ��еме в каналах с определённым назначением.', 'Устное предупреждение / Предупреждение / Мут 90 минут'],
-  '3.2': ['Текстовые каналы', 'Упоминание пользователей в текстовых каналах без сопровождающего сообщения.', 'Устное предупреждение / Предупреждение / Мут 90 минут'],
+  '3.2': ['Текстовые каналы', '��поминание пользователей в текстовых каналах без сопровождающего сообщения.', 'Устное предупреждение / Предупреждение / Мут 90 минут'],
   '3.3': ['Текстовые каналы', 'Чрезмерное использование верхнего регистра (CapsLock).', 'Устное предупреждение / Предупреждение / Мут 90 минут'],
   '3.4': ['Текстовые каналы', 'Злоупотребление знаками препинания и прочими символами.', 'Устное предупреждение / Предупреждение / Мут 90 минут'],
   '3.5': ['Текстовые каналы', 'Многократное упоминание пользователя.', 'Мут 90 минут'],
@@ -338,6 +341,7 @@ function ownerOnlyText() {
 }
 
 const STAFF_ROLE_ALIASES = new Map([
+  ['кгм', 'kgm'], ['kgm', 'kgm'], ['куратор гм', 'kgm'], ['куратор главных', 'kgm'], ['куратор главных модераторов', 'kgm'],
   ['гм', 'gm'], ['gm', 'gm'], ['главный', 'gm'], ['владелец', 'gm'], ['owner', 'gm'],
   ['згм', 'zgm'], ['zgm', 'zgm'], ['замгм', 'zgm'], ['зам', 'zgm'], ['заместитель', 'zgm'],
   ['куратор', 'curator'], ['кур', 'curator'], ['curator', 'curator'],
@@ -346,6 +350,7 @@ const STAFF_ROLE_ALIASES = new Map([
 ]);
 
 const STAFF_ROLE_TITLES = {
+  kgm: 'КГМ',
   gm: 'ГМ',
   zgm: 'ЗГМ',
   curator: 'Куратор',
@@ -354,6 +359,7 @@ const STAFF_ROLE_TITLES = {
 };
 
 const STAFF_ROLE_RANK = {
+  kgm: 110,
   gm: 100,
   zgm: 80,
   curator: 70,
@@ -405,7 +411,7 @@ async function canManageSiteModerators(vkUserId) {
 
 async function canManageStaffRoles(vkUserId, targetRole = 'moderator') {
   const actorRole = await getVkStaffRole(vkUserId);
-  if (actorRole === 'gm') return true;
+  if (actorRole === 'kgm' || actorRole === 'gm') return true;
   if (actorRole === 'zgm') return staffRoleRank(targetRole) < staffRoleRank('zgm');
   if (['curator', 'km'].includes(actorRole)) return normalizeStaffRole(targetRole) === 'moderator';
   return false;
@@ -1597,7 +1603,7 @@ async function createReport(sessionData, message) {
     `🧾 Работа: ${escapeLine(sessionData.work)}`,
     `📎 Доказательств: ${proofs.length}`,
     proofs[0]?.url ? `🔗 Открыть доказательство: ${escapeLine(proofs[0].url)}` : '',
-    `🕒 Статус: ${status}`,
+    `🕒 Ста��ус: ${status}`,
     `#️⃣ ID: ${reportId}`,
     aiReview ? '' : '',
     aiReview ? [
@@ -3091,7 +3097,7 @@ async function googleSheetDebugCommand(peerId) {
         `⚖️ Вердикт: ${escapeLine(verdictHeader || 'не найден')}`,
         '',
         items.length
-          ? `Последняя открытая строка: #${escapeLine(items[0].rowNumber || '—')}`
+          ? `Последняя отк��ытая строка: #${escapeLine(items[0].rowNumber || '—')}`
           : 'Открытых строк не найдено.',
       ].filter(Boolean).join('\n'));
       return;
@@ -3556,7 +3562,7 @@ function factFromMessage(text) {
 function isUnsafeAiFact(fact) {
   const raw = cleanText(fact).toLowerCase().replace(/ё/g, 'е');
   if (!raw) return true;
-  if (/\b(?:я|меня|мой)\s+(?:гм|згм|куратор|км|владелец|главный|админ|администратор|модератор)\b/i.test(raw)) return true;
+  if (/\b(?:я|��еня|мой)\s+(?:гм|згм|куратор|км|владелец|главный|админ|администратор|модератор)\b/i.test(raw)) return true;
   if (/\b(?:он|она|они|этот|эта|пользователь|юзер)\b.*\b(?:лох|дурак|тупой|нарушитель|скамер|мошенник|читер|слит|виноват)\b/i.test(raw)) return true;
   if (/\b(?:лох|дурак|тупой|дебил|клоун|чмо)\b/i.test(raw)) return true;
   if (/\b(?:точно|факт|доказано)\b.*\b(?:нарушил|виноват|скамер|читер)\b/i.test(raw)) return true;
@@ -4471,7 +4477,7 @@ async function buildMemePromptFromChat(peerId, vkUserId, chatLines) {
     '',
     'Как выглядит хороший мем:',
     '1. Есть узнаваемый конфликт/контраст: ожидание vs реальность, модератор vs хаос, "я всё понял" vs "опять 2.1?".',
-    '2. Есть один короткий панчлайн, а не куча случайных слов. Текст на картинке максимум 3-7 слов, крупный и читаемый.',
+    '2. Есть о��ин короткий панчлайн, а не куча случайных слов. Текст на картинке максимум 3-7 слов, крупный и читаемый.',
     '3. Шутка строится на ситуации из чата, а не на абстрактном "бот смешной".',
     '4. Визуал должен быть простым: 1-2 персонажа/объекта, понятная эмоция, один главный фокус.',
     '',
@@ -4771,7 +4777,7 @@ async function handleGroupCommand(peerId, vkUserId, text) {
     return true;
   }
 
-  // Создание новой беседы самим ботом: у таких бесед гарантированно полный доступ
+  // Создание новой беседы самим ботом: у таких бесед гарантированно полный досту��
   // к сообщениям (обход глюка VK, когда добавленному в чужую беседу боту не выдаются события)
   const create = raw.match(/^\/(?:group|группа|беседа)\s+(?:create|создать)\s+([^\s]+)$/i);
   if (create) {
@@ -4871,7 +4877,7 @@ function reportPayloadFromRow(row) {
     nick: payload.nick || payload.nickname || (combined.match(/Ник:\s*([^|]+)/i)?.[1] || ''),
     work: payload.work || payload.comment || (combined.match(/Работа:\s*([^|]+)/i)?.[1] || ''),
     date: payload.date || payload.day || (combined.match(/Дата:\s*([^|]+)/i)?.[1] || ''),
-    quality: payload.quality || payload.requestedStatus || (combined.match(/Тип сдачи:\s*([^|]+)/i)?.[1] || ''),
+    quality: payload.quality || payload.requestedStatus || (combined.match(/Тип сд��чи:\s*([^|]+)/i)?.[1] || ''),
     userId: payload.userId || payload.user_id || '',
     vkUserId: payload.vkUserId || '',
   };
@@ -5883,7 +5889,7 @@ async function handleModCommand(peerId, vkUserId, text, message = null) {
     return true;
   }
 
-  if (/^\/(?:отвязать|unlink|unbind)$/i.test(raw)) {
+  if (/^\/(?:отв��зать|unlink|unbind)$/i.test(raw)) {
     await unlinkVkCommand(peerId, vkUserId);
     return true;
   }
@@ -6497,7 +6503,7 @@ async function healthCommand(peerId, vkUserId) {
   const add = (name, ok, detail = '') => checks.push(`${ok ? '✅' : '⚠️'} ${name}${detail ? `: ${detail}` : ''}`);
 
   add('VK подключён', !!env('VK_GROUP_TOKEN'));
-  add('База подключена', !!env('SUPABASE_URL') && !!env('SUPABASE_SERVICE_ROLE_KEY'));
+  add('База ��одключена', !!env('SUPABASE_URL') && !!env('SUPABASE_SERVICE_ROLE_KEY'));
   add('Владелец задан', !!ownerVkId());
   add('Таблица заявок подключена', !!googleSheetPullUrl() && !!googleSheetPullSecret());
   add('AI-помощник подключён', aiProviderName() !== 'none', aiProviderName());

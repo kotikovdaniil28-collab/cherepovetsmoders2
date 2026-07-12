@@ -34,8 +34,9 @@ const NeonScene = dynamic(
 );
 
 const HIERARCHY = [
-  { short: "РМ", title: "Руководитель модераторов", sub: "8 уровень", violet: true },
-  { short: "ЗР", title: "Зам. руководителя модераторов", sub: "7 уровень", violet: true },
+  { short: "РМ", title: "Руководитель модераторов", sub: "9 уровень", violet: true },
+  { short: "ЗР", title: "Зам. руководителя модераторов", sub: "8 уровень", violet: true },
+  { short: "КГМ", title: "Куратор главных модераторов", sub: "7 уровень", violet: true },
   { short: "ГМ", title: "Главный модератор", sub: "6 уровень" },
   { short: "ЗГ", title: "Зам. главного модератора", sub: "5 уровень" },
   { short: "К", title: "Куратор", sub: "4 уровень" },

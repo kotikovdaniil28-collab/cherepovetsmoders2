@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText,
@@ -11,6 +11,9 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
+  Paperclip,
+  Loader2,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
@@ -56,6 +59,46 @@ export function ReportsClient() {
   const [work, setWork] = useState("");
   const [quality, setQuality] = useState("Норма");
   const [proofLinks, setProofLinks] = useState<string[]>([""]);
+  // Загруженные файлы-доказательства: { name, url }
+  const [files, setFiles] = useState<{ name: string; url: string }[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadFiles = async (list: FileList | null) => {
+    if (!list || list.length === 0) return;
+    const supa = getSupabase();
+    const { data: sess } = await supa.auth.getSession();
+    const token = sess.session?.access_token;
+    if (!token) {
+      toast.error("Сессия истекла — войдите заново");
+      return;
+    }
+    setUploading(true);
+    try {
+      for (const file of Array.from(list)) {
+        if (file.size > 8 * 1024 * 1024) {
+          toast.error(`«${file.name}» больше 8 МБ — пропущен`);
+          continue;
+        }
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch("/api/reports/upload", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: fd,
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || !json.url) {
+          toast.error(json.error || `Не удалось загрузить «${file.name}»`);
+          continue;
+        }
+        setFiles((arr) => [...arr, { name: file.name, url: String(json.url) }]);
+      }
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const load = useCallback(async () => {
     if (!user?.email) return;
@@ -80,7 +123,11 @@ export function ReportsClient() {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!user?.email) return;
-    const cleanProofs = proofLinks.map((s) => s.trim()).filter(Boolean);
+    // Ссылки + URL загруженных файлов — единый список доказательств
+    const cleanProofs = [
+      ...proofLinks.map((s) => s.trim()).filter(Boolean),
+      ...files.map((f) => f.url),
+    ];
     if (!nick.trim() || !work.trim()) {
       toast.error("Заполните ник и описание работы");
       return;
@@ -130,6 +177,7 @@ export function ReportsClient() {
       toast.success("Отчёт отправлен на проверку");
       setWork("");
       setProofLinks([""]);
+      setFiles([]);
       setDay(todayIso());
       await load();
       await refreshXp();
@@ -247,15 +295,63 @@ export function ReportsClient() {
                   )}
                 </div>
               ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="self-start"
-                onClick={() => setProofLinks((arr) => [...arr, ""])}
-              >
-                <Link2 className="size-4" /> Добавить ссылку
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setProofLinks((arr) => [...arr, ""])}
+                >
+                  <Link2 className="size-4" /> Добавить ссылку
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {uploading ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Paperclip className="size-4" />
+                  )}
+                  {uploading ? "Загрузка..." : "Прикрепить файл"}
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,application/pdf,text/plain"
+                  className="sr-only"
+                  onChange={(e) => uploadFiles(e.target.files)}
+                  aria-label="Прикрепить файлы-доказательства"
+                />
+              </div>
+              {files.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {files.map((f, i) => (
+                    <span
+                      key={f.url}
+                      className="bg-secondary text-secondary-foreground inline-flex max-w-full items-center gap-1.5 rounded-full py-1 pr-1 pl-3 text-xs font-semibold"
+                    >
+                      <Paperclip className="size-3 shrink-0" />
+                      <span className="max-w-40 truncate">{f.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setFiles((arr) => arr.filter((_, j) => j !== i))}
+                        className="hover:bg-background flex size-5 items-center justify-center rounded-full transition-colors"
+                        aria-label={`Убрать файл ${f.name}`}
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <p className="text-muted-foreground text-xs">
+                Скриншоты, видео или PDF до 8 МБ — файлы прикрепятся к отчёту как доказательства
+              </p>
             </div>
             <motion.div whileTap={{ scale: 0.985 }}>
               <Button type="submit" disabled={saving} className="h-11 w-full gap-2 text-sm font-bold">

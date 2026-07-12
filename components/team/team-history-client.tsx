@@ -26,7 +26,7 @@ type TimelineEvent = {
   at: number;
 };
 
-const RANK_ORDER = ["junior_moderator", "moderator", "senior_moderator", "km", "zgm", "gm"];
+const RANK_ORDER = ["junior_moderator", "moderator", "senior_moderator", "km", "zgm", "gm", "kgm"];
 
 function fmtDate(ms: number): string {
   return new Date(ms).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });

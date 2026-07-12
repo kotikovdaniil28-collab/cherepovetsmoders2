@@ -11,6 +11,7 @@ export type ModRank =
   | "km"
   | "zgm"
   | "gm"
+  | "kgm"
   | "unknown";
 
 export type PromotionRules = {
@@ -45,6 +46,7 @@ export const RANK_LABELS: Record<ModRank, string> = {
   km: "Куратор модерации",
   zgm: "Зам. главного модератора",
   gm: "Главный модератор",
+  kgm: "Куратор главных модераторов",
   unknown: "Модератор",
 };
 
@@ -52,6 +54,8 @@ export const RANK_LABELS: Record<ModRank, string> = {
 export function normalizeRank(raw: string | null | undefined): ModRank {
   const s = (raw || "").toLowerCase().trim();
   if (!s) return "unknown";
+  // КГМ проверяем ДО км: "куратор главных модераторов" тоже содержит "куратор"
+  if (s === "kgm" || s === "кгм" || s.includes("куратор главн")) return "kgm";
   if (s === "km" || s.includes("куратор")) return "km";
   if (s === "zgm" || s.includes("зам")) return "zgm";
   if (s === "gm" || s.includes("главн")) return "gm";

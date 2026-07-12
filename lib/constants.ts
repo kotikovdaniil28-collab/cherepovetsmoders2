@@ -95,6 +95,7 @@ export const RANKS: Record<string, { short: string; title: string; next?: string
   km: { short: "КМ", title: "Куратор модерации" },
   zgm: { short: "ЗГМ", title: "Заместитель главного модератора" },
   gm: { short: "ГМ", title: "Главный модератор" },
+  kgm: { short: "КГМ", title: "Куратор главных модераторов" },
 };
 
 export type AdminRole = "leadership" | "ap_admin" | "fsb_admin";

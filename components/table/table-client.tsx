@@ -37,6 +37,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ActivityChart } from "@/components/table/activity-chart";
 import { cn } from "@/lib/utils";
 
 type Row = {
@@ -267,6 +268,12 @@ export function TableClient() {
 
   const weekLabel = `${matrixDays[0]?.label} — ${matrixDays[6]?.label}`;
 
+  // Данные для графика «Активность»: только одобренные и ожидающие отчёты недели
+  const activityReports = useMemo(
+    () => rows.map((r) => ({ dayKey: mskDayKey(r.dayMs), xp: r.xp })),
+    [rows]
+  );
+
   return (
     <div className="flex flex-col gap-6">
       <Reveal>
@@ -350,7 +357,9 @@ export function TableClient() {
 
       {/* ===== МАТРИЦА: модератор x дни ===== */}
       {view === "matrix" && (
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
+          {/* График активности за выбранную неделю */}
+          {!loading && <ActivityChart days={matrixDays} reports={activityReports} />}
           {/* Панель недели + легенда */}
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-1.5">
