@@ -179,7 +179,7 @@ export function DashboardClient() {
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold">VK не привязан</p>
               <p className="text-muted-foreground text-xs">
-                Привяжи VK в профиле, чтобы получать вердикты и уведомления от бота в ЛС
+                Привяжи VK в профиле, чтобы получать вердикты и уведо��ления от бота в ЛС
               </p>
             </div>
             <Link
@@ -259,12 +259,15 @@ export function DashboardClient() {
             </div>
             <div className="text-left sm:ml-auto sm:text-right">
               <div className="font-display text-3xl font-extrabold tabular-nums">
-                <CountUp value={xp.total} className="text-green-bright text-glow" />
+                <CountUp value={xp.modXp} className="text-green-bright text-glow" />
               </div>
               <div className="text-on-hero-soft text-xs">реальный XP</div>
+              <div className="text-on-hero-soft/70 mt-0.5 text-[11px] tabular-nums">
+                + {xp.gameXp.toLocaleString("ru-RU")} игрового
+              </div>
             </div>
           </div>
-          <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-[oklch(0.97_0.01_148/0.1)] md:grid-cols-4">
+          <div className="relative mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-[oklch(0.97_0.01_148/0.1)] md:grid-cols-4">
             {[
               { v: loading ? "—" : stats.total, k: "отчётов всего" },
               { v: loading ? "—" : stats.heroes, k: "Героев дня" },

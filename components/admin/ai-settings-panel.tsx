@@ -42,15 +42,22 @@ export function AiSettingsPanel() {
   }, []);
 
   async function save() {
-    if (!apiKey.trim()) {
-      setStatus("Вставьте API-ключ DeepSeek.");
+    const key = apiKey.trim();
+    if (!key) {
+      setStatus("Вставьте API-ключ (DeepSeek «sk-...» или xAI «xai-...»).");
       return;
     }
     setBusy(true);
     setStatus("");
     try {
       const supa = getSupabase();
-      const cfg = { apiKey: apiKey.trim(), endpoint: DEFAULT_ENDPOINT, model: model.trim() || DEFAULT_MODEL };
+      // xAI-ключи получают свой endpoint и модель автоматически
+      const isXai = key.startsWith("xai-");
+      const cfg = {
+        apiKey: key,
+        endpoint: isXai ? "https://api.x.ai/v1/chat/completions" : DEFAULT_ENDPOINT,
+        model: model.trim() || (isXai ? "grok-3-mini" : DEFAULT_MODEL),
+      };
       const row = {
         id: ROW_ID,
         email: "ACCESS_KEY",
@@ -79,7 +86,7 @@ export function AiSettingsPanel() {
             <Bot className="size-4.5" />
           </span>
           <div>
-            <h2 className="font-display text-sm font-bold">AI-помощник (DeepSeek)</h2>
+            <h2 className="font-display text-sm font-bold">AI-помощник (DeepSeek / Grok)</h2>
             <p className="text-muted-foreground text-xs">
               {hasSaved
                 ? "Ключ настроен. Можно заменить на новый."
@@ -88,7 +95,7 @@ export function AiSettingsPanel() {
           </div>
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="ds-key">API-ключ DeepSeek</Label>
+          <Label htmlFor="ds-key">API-ключ (DeepSeek или xAI/Grok)</Label>
           <Input
             id="ds-key"
             type="password"

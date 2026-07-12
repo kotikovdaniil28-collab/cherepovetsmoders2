@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getAnonServerClient } from "@/lib/supabase/admin";
 
 /**
  * AI-помощник по инструкции модерации (DeepSeek).
@@ -15,16 +15,40 @@ const DEFAULT_MODEL = "deepseek-chat";
 
 type AiConfig = { apiKey: string; endpoint: string; model: string };
 
+const XAI_ENDPOINT = "https://api.x.ai/v1/chat/completions";
+const XAI_MODEL = "grok-3-mini";
+
+/**
+ * Автоопределение провайдера по префиксу ключа:
+ * - "xai-..." — xAI (Grok), даже если в конфиге сохранён endpoint DeepSeek
+ * - иначе — DeepSeek (ключи "sk-...")
+ */
+function resolveProvider(apiKey: string, endpoint: string, model: string): AiConfig {
+  if (apiKey.startsWith("xai-")) {
+    const isDeepseekLeftover = endpoint.includes("deepseek") || model.includes("deepseek");
+    return {
+      apiKey,
+      endpoint: isDeepseekLeftover ? XAI_ENDPOINT : endpoint || XAI_ENDPOINT,
+      model: isDeepseekLeftover ? XAI_MODEL : model || XAI_MODEL,
+    };
+  }
+  return {
+    apiKey,
+    endpoint: endpoint || DEFAULT_ENDPOINT,
+    model: model || DEFAULT_MODEL,
+  };
+}
+
 function parseConfig(raw: unknown): AiConfig | null {
   try {
     const cfg = typeof raw === "string" ? JSON.parse(raw) : (raw as Record<string, unknown>);
     const apiKey = String(cfg?.apiKey || cfg?.key || "").trim();
     if (!apiKey) return null;
-    return {
+    return resolveProvider(
       apiKey,
-      endpoint: String(cfg?.endpoint || DEFAULT_ENDPOINT).trim() || DEFAULT_ENDPOINT,
-      model: String(cfg?.model || DEFAULT_MODEL).trim() || DEFAULT_MODEL,
-    };
+      String(cfg?.endpoint || "").trim(),
+      String(cfg?.model || "").trim(),
+    );
   } catch {
     return null;
   }
@@ -37,12 +61,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
   }
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-  const supa = createClient(url, anonKey, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  const supa = getAnonServerClient(token);
 
   const { data: userData, error: userErr } = await supa.auth.getUser(token);
   if (userErr || !userData?.user) {
