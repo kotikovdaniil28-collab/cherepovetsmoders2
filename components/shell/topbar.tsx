@@ -94,7 +94,7 @@ export function Topbar() {
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
           <motion.span
             whileHover={{ rotate: -8, scale: 1.06 }}
-            className="bg-linear-to-br from-green-bright to-green-deep text-primary-foreground shadow-green/35 flex size-9 items-center justify-center rounded-xl shadow-lg"
+            className="bg-linear-to-br from-green-bright to-green-deep text-primary-foreground glow-primary flex size-9 items-center justify-center rounded-xl"
           >
             <ShieldCheck className="size-5" />
           </motion.span>

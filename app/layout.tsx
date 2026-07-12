@@ -38,7 +38,7 @@ export default function RootLayout({
       className={`bg-background ${manrope.variable} ${unbounded.variable} ${mono.variable}`}
     >
       <body className="font-sans antialiased">
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           {children}
           <Toaster richColors position="top-center" />
         </ThemeProvider>

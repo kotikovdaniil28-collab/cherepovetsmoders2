@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import {
   Activity,
@@ -24,6 +25,12 @@ import { reportDayMs, type ReportRow } from "@/lib/reports";
 import { levelFromXp } from "@/lib/level";
 import { buildPromotionTrack } from "@/lib/promotion";
 import { Reveal, SecHead } from "@/components/ui/reveal";
+import { CountUp } from "@/components/ui/count-up";
+
+const NeonScene = dynamic(
+  () => import("@/components/three/neon-scene").then((m) => m.NeonScene),
+  { ssr: false }
+);
 
 const HIERARCHY = [
   { short: "РМ", title: "Руководитель модераторов", sub: "8 уровень", violet: true },
@@ -217,8 +224,16 @@ export function DashboardClient() {
 
       {/* Hero профиля */}
       <Reveal i={1}>
-        <div className="hero-surface rounded-3xl p-5 md:p-8">
-          <div className="flex flex-wrap items-start gap-5">
+        <div className="hero-surface relative overflow-hidden rounded-3xl p-5 md:p-8">
+          {/* 3D-декор в правой части hero — только на десктопе */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 hidden w-[46%] opacity-70 lg:block"
+          >
+            <NeonScene compact className="size-full" />
+            <div className="absolute inset-0 bg-linear-to-r from-[oklch(0.24_0.05_152)] via-transparent to-transparent" />
+          </div>
+          <div className="relative flex flex-wrap items-start gap-5">
             <motion.div
               whileHover={{ rotate: -4, scale: 1.04 }}
               className="from-green-bright to-green-deep font-display text-primary-foreground flex size-16 items-center justify-center rounded-2xl bg-linear-to-br text-2xl font-extrabold md:size-[72px]"
@@ -244,16 +259,7 @@ export function DashboardClient() {
             </div>
             <div className="text-left sm:ml-auto sm:text-right">
               <div className="font-display text-3xl font-extrabold tabular-nums">
-                {Math.floor(xp.total / 1000) > 0 ? (
-                  <>
-                    {Math.floor(xp.total / 1000)}{" "}
-                    <span className="text-green-bright">
-                      {String(xp.total % 1000).padStart(3, "0")}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-green-bright">{xp.total}</span>
-                )}
+                <CountUp value={xp.total} className="text-green-bright text-glow" />
               </div>
               <div className="text-on-hero-soft text-xs">реальный XP</div>
             </div>
