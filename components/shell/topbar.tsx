@@ -28,6 +28,7 @@ export function Topbar() {
 
   const nickname =
     (user?.user_metadata?.nickname as string) || user?.email?.split("@")[0] || "Пользователь";
+  const avatarUrl = (user?.user_metadata?.avatar_url as string) || "";
 
   const roleLabel = roles.isCreator
     ? "Создатель"
@@ -209,8 +210,13 @@ export function Topbar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="gap-2 px-1.5" aria-label="Меню профиля">
-                <span className="bg-linear-to-br from-green-bright to-green-deep text-primary-foreground font-display flex size-8 items-center justify-center rounded-xl text-xs font-bold">
-                  {nickname.slice(0, 1).toUpperCase()}
+                <span className="bg-linear-to-br from-green-bright to-green-deep text-primary-foreground font-display flex size-8 items-center justify-center overflow-hidden rounded-xl text-xs font-bold">
+                  {avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={avatarUrl} alt="" className="size-full object-cover" />
+                  ) : (
+                    nickname.slice(0, 1).toUpperCase()
+                  )}
                 </span>
               </Button>
             </DropdownMenuTrigger>

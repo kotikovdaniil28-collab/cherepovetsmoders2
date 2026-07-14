@@ -142,6 +142,7 @@ export function DashboardClient() {
   const lvl = levelFromXp(xp.total);
   const rank = career?.rank ? RANKS[career.rank] : null;
   const displayName = nickname || user?.email?.split("@")[0] || "Модератор";
+  const avatarUrl = (user?.user_metadata?.avatar_url as string) || "";
   const daysOnRank = career?.rank_started_at
     ? Math.max(0, Math.floor((Date.now() - new Date(career.rank_started_at).getTime()) / DAY))
     : null;
@@ -238,9 +239,14 @@ export function DashboardClient() {
           <div className="relative flex flex-wrap items-start gap-5">
             <motion.div
               whileHover={{ rotate: -4, scale: 1.04 }}
-              className="from-green-bright to-green-deep font-display text-primary-foreground flex size-16 items-center justify-center rounded-2xl bg-linear-to-br text-2xl font-extrabold md:size-[72px]"
+              className="from-green-bright to-green-deep font-display text-primary-foreground flex size-16 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br text-2xl font-extrabold md:size-[72px]"
             >
-              {displayName.slice(0, 1).toUpperCase()}
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt="" className="size-full object-cover" />
+              ) : (
+                displayName.slice(0, 1).toUpperCase()
+              )}
             </motion.div>
             <div className="min-w-0 flex-1">
               <span className="bg-green-bright/16 text-green-bright mb-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] uppercase">

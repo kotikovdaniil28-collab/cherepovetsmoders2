@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Zap, Coins, UserCog } from "lucide-react";
+import { Search, Zap, Coins, UserCog, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
 import { getSupabase } from "@/lib/supabase/client";
@@ -59,6 +59,8 @@ export function UsersPanel() {
   const [grantReason, setGrantReason] = useState("");
   const [grantType, setGrantType] = useState<"xp" | "game">("xp");
   const [busy, setBusy] = useState(false);
+  const [newPwd, setNewPwd] = useState("");
+  const [pwdBusy, setPwdBusy] = useState(false);
 
   const load = useCallback(async () => {
     const supa = getSupabase();
@@ -189,6 +191,32 @@ export function UsersPanel() {
     }
   };
 
+  const resetPassword = async () => {
+    if (!selected) return;
+    if (newPwd.length < 6) {
+      toast.error("Пароль должен быть не короче 6 символов");
+      return;
+    }
+    setPwdBusy(true);
+    try {
+      const { data: sessionData } = await getSupabase().auth.getSession();
+      const token = sessionData.session?.access_token;
+      const res = await fetch("/api/admin/reset-password", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: selected.user_id, password: newPwd }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      if (!res.ok || !json.ok) throw new Error(json.error || "reset failed");
+      setNewPwd("");
+      toast.success(`Пароль для ${selected.nickname} изменён`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Не удалось сбросить пароль");
+    } finally {
+      setPwdBusy(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="relative max-w-sm">
@@ -223,7 +251,10 @@ export function UsersPanel() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setSelected(u)}
+                      onClick={() => {
+                        setNewPwd("");
+                        setSelected(u);
+                      }}
                       disabled={u.user_id === me?.id && !myRoles.isCreator}
                     >
                       <UserCog className="size-4" /> Управлять
@@ -253,7 +284,15 @@ export function UsersPanel() {
         )}
       </div>
 
-      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+      <Dialog
+        open={!!selected}
+        onOpenChange={(o) => {
+          if (!o) {
+            setNewPwd("");
+            setSelected(null);
+          }
+        }}
+      >
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{selected?.nickname || selected?.email}</DialogTitle>
@@ -337,6 +376,30 @@ export function UsersPanel() {
                   Начислить
                 </Button>
               </div>
+
+              {(myRoles.isCreator || myRoles.isLeadership) && (
+                <div className="flex flex-col gap-2 border-t pt-4">
+                  <Label className="flex items-center gap-2">
+                    <KeyRound className="size-4" /> Сброс пароля
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="password"
+                      value={newPwd}
+                      onChange={(e) => setNewPwd(e.target.value)}
+                      placeholder="Новый пароль (мин. 6 символов)"
+                      autoComplete="new-password"
+                      aria-label="Новый пароль пользователя"
+                    />
+                    <Button onClick={resetPassword} disabled={pwdBusy || !newPwd} variant="secondary">
+                      {pwdBusy ? "…" : "Сбросить"}
+                    </Button>
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    Пользователь сможет войти с новым паролем. Сообщите ему пароль лично.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
