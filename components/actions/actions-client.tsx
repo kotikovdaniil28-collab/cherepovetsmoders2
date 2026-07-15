@@ -77,7 +77,7 @@ export function ActionsClient() {
         id: `log_${l.id}`,
         kind: "purchase",
         title: String(l.nickname || l.user_email || "Модератор"),
-        detail: `${l.item_name} · ${l.cost} ${l.type === "ap_shop" ? "AP" : "XP"} · ${l.status}`,
+        detail: `${l.item_name} · ${l.cost} XP · ${l.status}`,
         status: String(l.status || ""),
         positive: true,
         ts: l.created_at ? new Date(String(l.created_at)).getTime() : 0,

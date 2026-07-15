@@ -1174,19 +1174,6 @@ async function isModerator(siteUserId) {
   return Array.isArray(data) && data.length > 0;
 }
 
-async function isAp(siteUserId) {
-  const { data, error } = await getSupabase()
-    .from('reports')
-    .select('id')
-    .eq('email', 'USER_ROLE')
-    .eq('link', String(siteUserId))
-    .eq('status', 'ap')
-    .limit(1);
-
-  if (error) throw error;
-  return Array.isArray(data) && data.length > 0;
-}
-
 async function isBotAdminOrAp(vkUserId) {
   // Backward-compatible name, but high-privilege bot ownership is now OWNER_VK_ID only.
   return isOwner(vkUserId);
@@ -2148,7 +2135,6 @@ async function userInfo(peerId, targetVkId) {
 
   const stats = await getUserStats(linked.site_user_id, linked.email);
   const mod = await isModerator(linked.site_user_id).catch(() => false);
-  const ap = await isAp(linked.site_user_id).catch(() => false);
 
   await sendMessage(peerId, [
     '👤 КАРТОЧКА ПОЛЬЗОВАТЕЛЯ',
@@ -2158,7 +2144,6 @@ async function userInfo(peerId, targetVkId) {
     `📧 Email: ${linked.email || stats?.email || '—'}`,
     `🏷 Ник: ${linked.nickname || stats?.nickname || '—'}`,
     `🛡 Модератор: ${mod ? 'да' : 'нет'}`,
-    `👑 Руководство АП: ${ap ? 'да' : 'нет'}`,
   ].join('\n'));
 }
 

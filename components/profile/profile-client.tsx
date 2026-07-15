@@ -191,9 +191,7 @@ export function ProfileClient() {
   if (roles.isCreator) roleBadges.push("Создатель");
   else if (roles.isLeadership) roleBadges.push("Руководство");
   if (roles.kinds.has("moderator")) roleBadges.push("Модератор");
-  if (roles.kinds.has("ap")) roleBadges.push("АП");
   if (roles.kinds.has("fsb")) roleBadges.push("ФСБ");
-  if (roles.isApAdmin) roleBadges.push("Рук. АП");
   if (roles.isFsbAdmin) roleBadges.push("Рук. ФСБ");
 
   return (

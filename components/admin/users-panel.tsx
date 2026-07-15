@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Zap, Coins, UserCog, KeyRound } from "lucide-react";
+import { Search, Zap, Coins, UserCog, KeyRound, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
 import { getSupabase } from "@/lib/supabase/client";
-import { KV, type AdminRole, type UserKind } from "@/lib/constants";
+import { KV, CREATOR_EMAIL, type AdminRole, type UserKind } from "@/lib/constants";
 import { makeId } from "@/lib/reports";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,13 +38,11 @@ type RoleRow = { link: string; status: string };
 
 const ADMIN_ROLE_LABELS: Record<string, string> = {
   leadership: "Руководство модерации",
-  ap_admin: "Руководство АП",
   fsb_admin: "Руководство ФСБ",
 };
 
 const KIND_LABELS: Record<string, string> = {
   moderator: "Модератор",
-  ap: "АП",
   fsb: "ФСБ",
 };
 
@@ -61,6 +59,8 @@ export function UsersPanel() {
   const [busy, setBusy] = useState(false);
   const [newPwd, setNewPwd] = useState("");
   const [pwdBusy, setPwdBusy] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const load = useCallback(async () => {
     const supa = getSupabase();
@@ -217,6 +217,34 @@ export function UsersPanel() {
     }
   };
 
+  const deleteAccount = async () => {
+    if (!selected) return;
+    if (deleteConfirm.trim() !== "УДАЛИТЬ") {
+      toast.error("Для подтверждения введите слово УДАЛИТЬ");
+      return;
+    }
+    setDeleteBusy(true);
+    try {
+      const { data: sessionData } = await getSupabase().auth.getSession();
+      const token = sessionData.session?.access_token;
+      const res = await fetch("/api/admin/delete-user", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: selected.user_id }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      if (!res.ok || !json.ok) throw new Error(json.error || "delete failed");
+      toast.success(`Аккаунт ${selected.nickname || selected.email} удалён`);
+      setDeleteConfirm("");
+      setSelected(null);
+      await load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Не удалось удалить аккаунт");
+    } finally {
+      setDeleteBusy(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="relative max-w-sm">
@@ -289,6 +317,7 @@ export function UsersPanel() {
         onOpenChange={(o) => {
           if (!o) {
             setNewPwd("");
+            setDeleteConfirm("");
             setSelected(null);
           }
         }}
@@ -400,6 +429,35 @@ export function UsersPanel() {
                   </p>
                 </div>
               )}
+
+              {(myRoles.isCreator || myRoles.isLeadership) &&
+                selected.email?.toLowerCase() !== CREATOR_EMAIL &&
+                selected.user_id !== me?.id && (
+                  <div className="border-destructive/40 flex flex-col gap-2 rounded-lg border border-dashed p-3">
+                    <Label className="text-destructive flex items-center gap-2">
+                      <Trash2 className="size-4" /> Удаление аккаунта
+                    </Label>
+                    <p className="text-muted-foreground text-xs">
+                      Безвозвратно удаляет аккаунт и все данные пользователя: отчёты, роли, XP, карьеру,
+                      VK-привязку, логи покупок. Действие необратимо.
+                    </p>
+                    <div className="flex gap-2">
+                      <Input
+                        value={deleteConfirm}
+                        onChange={(e) => setDeleteConfirm(e.target.value)}
+                        placeholder="Введите УДАЛИТЬ для подтверждения"
+                        aria-label="Подтверждение удаления"
+                      />
+                      <Button
+                        onClick={deleteAccount}
+                        disabled={deleteBusy || deleteConfirm.trim() !== "УДАЛИТЬ"}
+                        variant="destructive"
+                      >
+                        {deleteBusy ? "…" : "Удалить"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
             </div>
           )}
         </DialogContent>

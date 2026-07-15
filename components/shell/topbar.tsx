@@ -34,15 +34,11 @@ export function Topbar() {
     ? "Создатель"
     : roles.isLeadership
       ? "Руководство"
-      : roles.isApAdmin
-        ? "Рук. АП"
-        : roles.isFsbAdmin
-          ? "Рук. ФСБ"
-          : roles.kinds.has("fsb")
-            ? "ФСБ"
-            : roles.kinds.has("ap")
-              ? "АП"
-              : "Модератор";
+      : roles.isFsbAdmin
+        ? "Рук. ФСБ"
+        : roles.kinds.has("fsb")
+          ? "ФСБ"
+          : "Модератор";
 
   const items = visibleItems(roles, NAV_ITEMS);
 
