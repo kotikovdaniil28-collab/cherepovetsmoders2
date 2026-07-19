@@ -182,7 +182,7 @@ export function DashboardClient() {
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold">VK не привязан</p>
               <p className="text-muted-foreground text-xs">
-                Привяжи VK в профиле, чтобы получать вердикты и уведо��ления от бота в ЛС
+                Привяжи VK в профиле, чтобы получать вердикты и уведомления от бота в ЛС
               </p>
             </div>
             <Link
