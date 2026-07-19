@@ -229,17 +229,18 @@ export function DashboardClient() {
       <Reveal i={1}>
         <div className="hero-surface relative overflow-hidden rounded-3xl p-5 md:p-8">
           {/* 3D-декор в правой части hero — только на десктопе.
-              Кристалл сдвинут за правый край и приглушён, чтобы не мешать тексту. */}
+              Квадратный контейнер целиком внутри карточки + радиальная маска,
+              чтобы кристалл плавно растворялся по краям, а не обрезался. */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-y-0 -right-[8%] hidden w-[42%] opacity-50 lg:block"
+            className="pointer-events-none absolute top-1/2 right-2 hidden aspect-square h-[135%] -translate-y-1/2 opacity-80 [mask-image:radial-gradient(closest-side,black_45%,transparent_98%)] lg:block"
           >
             <NeonScene compact className="size-full" />
           </div>
-          {/* Плотная маска-переход: слева фон hero держится дольше, текст остаётся читаемым */}
+          {/* Мягкий переход слева, чтобы текст оставался читаемым поверх декора */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 hidden bg-linear-to-r from-[oklch(0.24_0.05_152)] from-45% via-[oklch(0.24_0.05_152/0.55)] via-70% to-transparent lg:block"
+            className="pointer-events-none absolute inset-0 hidden bg-linear-to-r from-[oklch(0.24_0.05_152)] from-35% via-[oklch(0.24_0.05_152/0.35)] via-65% to-transparent lg:block"
           />
           <div className="relative flex flex-wrap items-start gap-5">
             <motion.div
