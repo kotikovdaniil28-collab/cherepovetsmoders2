@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, getServiceRoleKey } from "@/lib/supabase/env";
 
 export const dynamic = "force-dynamic";
 
@@ -36,16 +37,9 @@ type ReportRow = {
   xp?: number | null;
 };
 
-// Те же значения, что в lib/supabase/client.ts — на случай отсутствия env на сервере
-const FALLBACK_URL = "https://hcefoztytkfskmdchqos.supabase.co";
-const FALLBACK_ANON_KEY = "sb_publishable_VRSxi6NDTxJwAcQkni6dwg_xluZs8X6";
-
 function config() {
-  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || FALLBACK_URL;
-  const anonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || FALLBACK_ANON_KEY;
   // Сервисный ключ опционален: без него работаем от имени пользователя (через RLS)
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-  return { url, anonKey, serviceKey };
+  return { url: SUPABASE_URL, anonKey: SUPABASE_ANON_KEY, serviceKey: getServiceRoleKey() || "" };
 }
 
 function parsePayload(row: ReportRow) {
