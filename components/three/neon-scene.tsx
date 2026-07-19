@@ -38,18 +38,22 @@ function CoreCrystal() {
         <meshStandardMaterial
           color={NEON_DIM}
           emissive={NEON}
-          emissiveIntensity={1.6}
-          roughness={0.2}
-          metalness={0.4}
+          emissiveIntensity={0.9}
+          roughness={0.3}
+          metalness={0.35}
         />
       </Icosahedron>
     </group>
   );
 }
 
-function OrbitRings() {
+function OrbitRings({ compact }: { compact?: boolean }) {
   const g1 = useRef<THREE.Group>(null);
   const g2 = useRef<THREE.Group>(null);
+
+  // В compact-режиме кольца меньше, чтобы сцена целиком помещалась в кадр
+  const r1 = compact ? 2.1 : 2.5;
+  const r2 = compact ? 2.55 : 3.1;
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
@@ -60,20 +64,20 @@ function OrbitRings() {
   return (
     <>
       <group ref={g1} rotation={[Math.PI / 2.4, 0.4, 0]}>
-        <Torus args={[2.5, 0.006, 8, 128]}>
+        <Torus args={[r1, 0.006, 8, 128]}>
           <meshBasicMaterial color={NEON} transparent opacity={0.35} />
         </Torus>
         {/* Спутник на орбите */}
-        <mesh position={[2.5, 0, 0]}>
+        <mesh position={[r1, 0, 0]}>
           <sphereGeometry args={[0.06, 16, 16]} />
           <meshBasicMaterial color={AMBER} />
         </mesh>
       </group>
       <group ref={g2} rotation={[Math.PI / 1.8, -0.5, 0.3]}>
-        <Torus args={[3.1, 0.004, 8, 128]}>
+        <Torus args={[r2, 0.004, 8, 128]}>
           <meshBasicMaterial color={NEON} transparent opacity={0.2} />
         </Torus>
-        <mesh position={[-3.1, 0, 0]}>
+        <mesh position={[-r2, 0, 0]}>
           <sphereGeometry args={[0.045, 16, 16]} />
           <meshBasicMaterial color={NEON} />
         </mesh>
@@ -100,13 +104,23 @@ function SceneContent({ compact }: { compact?: boolean }) {
       <pointLight position={[4, 4, 4]} intensity={40} color={NEON} />
       <pointLight position={[-4, -2, -3]} intensity={12} color={AMBER} />
 
-      <Float speed={1.4} rotationIntensity={0.25} floatIntensity={0.9}>
-        <CoreCrystal />
-      </Float>
-      <OrbitRings />
-      <Sparkles count={compact ? 40 : 90} scale={[9, 6, 6]} size={2.2} speed={0.35} color={NEON} opacity={0.7} />
+      <group scale={compact ? 0.85 : 1}>
+        <Float speed={1.4} rotationIntensity={0.25} floatIntensity={compact ? 0.5 : 0.9}>
+          <CoreCrystal />
+        </Float>
+        <OrbitRings compact={compact} />
+      </group>
+      <Sparkles
+        count={compact ? 36 : 90}
+        scale={compact ? [5.5, 5.5, 4] : [9, 6, 6]}
+        size={2.2}
+        speed={0.35}
+        color={NEON}
+        opacity={0.7}
+      />
       {!compact && <GridFloor />}
-      <fog attach="fog" args={["#0a120d", 7, 16]} />
+      {/* Туман только в полной сцене — в compact он «грязнит» цвета на прозрачном фоне */}
+      {!compact && <fog attach="fog" args={["#0a120d", 7, 16]} />}
     </>
   );
 }
@@ -120,7 +134,7 @@ export function NeonScene({ compact = false, className }: { compact?: boolean; c
     <div className={className} aria-hidden>
       <Canvas
         dpr={[1, 1.75]}
-        camera={{ position: [0, 0.4, compact ? 6.5 : 7.5], fov: 42 }}
+        camera={{ position: [0, compact ? 0 : 0.4, compact ? 7 : 7.5], fov: compact ? 45 : 42 }}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
         style={{ background: "transparent" }}
       >
