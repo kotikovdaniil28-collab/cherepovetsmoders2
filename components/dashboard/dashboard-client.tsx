@@ -242,37 +242,39 @@ export function DashboardClient() {
             aria-hidden
             className="pointer-events-none absolute inset-0 hidden bg-linear-to-r from-[oklch(0.24_0.05_152)] from-35% via-[oklch(0.24_0.05_152/0.35)] via-65% to-transparent lg:block"
           />
-          <div className="relative flex flex-wrap items-start gap-5">
-            <motion.div
-              whileHover={{ rotate: -4, scale: 1.04 }}
-              className="from-green-bright to-green-deep font-display text-primary-foreground flex size-16 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br text-2xl font-extrabold md:size-[72px]"
-            >
-              {avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={avatarUrl} alt="" className="size-full object-cover" />
-              ) : (
-                displayName.slice(0, 1).toUpperCase()
-              )}
-            </motion.div>
-            <div className="min-w-0 flex-1">
-              <span className="bg-green-bright/16 text-green-bright mb-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] uppercase">
-                <Star className="size-3" /> {roleTitle}
-              </span>
-              <h1 className="font-display text-2xl font-extrabold text-balance md:text-3xl">
-                {displayName}
-              </h1>
-              <p className="text-on-hero-soft mt-1.5 text-sm">
-                {daysOnRank !== null ? (
-                  <>
-                    На ступени <b className="text-on-hero">{daysOnRank} дн.</b> ·{" "}
-                  </>
-                ) : null}
-                Уровень <b className="text-on-hero">{lvl.level}</b> ·{" "}
-                {lvl.intoLevel}/{lvl.needed} XP до следующего
-              </p>
+          <div className="relative flex flex-wrap items-start gap-x-5 gap-y-4">
+            <div className="flex min-w-0 flex-1 items-start gap-4 sm:gap-5">
+              <motion.div
+                whileHover={{ rotate: -4, scale: 1.04 }}
+                className="from-green-bright to-green-deep font-display text-primary-foreground flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br text-2xl font-extrabold sm:size-16 md:size-[72px]"
+              >
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt="" className="size-full object-cover" />
+                ) : (
+                  displayName.slice(0, 1).toUpperCase()
+                )}
+              </motion.div>
+              <div className="min-w-0 flex-1">
+                <span className="bg-green-bright/16 text-green-bright mb-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] uppercase">
+                  <Star className="size-3" /> {roleTitle}
+                </span>
+                <h1 className="font-display text-xl font-extrabold break-words text-balance sm:text-2xl md:text-3xl">
+                  {displayName}
+                </h1>
+                <p className="text-on-hero-soft mt-1.5 text-sm">
+                  {daysOnRank !== null ? (
+                    <>
+                      На ступени <b className="text-on-hero">{daysOnRank} дн.</b> ·{" "}
+                    </>
+                  ) : null}
+                  Уровень <b className="text-on-hero">{lvl.level}</b> ·{" "}
+                  {lvl.intoLevel}/{lvl.needed} XP до следующего
+                </p>
+              </div>
             </div>
-            <div className="bg-[oklch(0.2_0.04_152/0.55)] rounded-2xl px-4 py-2.5 text-left backdrop-blur-sm sm:ml-auto sm:text-right lg:bg-[oklch(0.2_0.04_152/0.7)]">
-              <div className="font-display text-3xl font-extrabold tabular-nums">
+            <div className="bg-[oklch(0.2_0.04_152/0.55)] w-full shrink-0 rounded-2xl px-4 py-2.5 text-left backdrop-blur-sm sm:ml-auto sm:w-auto sm:text-right lg:bg-[oklch(0.2_0.04_152/0.7)]">
+              <div className="font-display text-2xl font-extrabold tabular-nums sm:text-3xl">
                 <CountUp value={xp.modXp} className="text-green-bright text-glow" />
               </div>
               <div className="text-on-hero-soft text-xs">реальный XP</div>
