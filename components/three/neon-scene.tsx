@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo, Suspense } from "react";
+import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, Sparkles, Icosahedron, Torus } from "@react-three/drei";
 import * as THREE from "three";
@@ -64,21 +64,21 @@ function OrbitRings({ compact }: { compact?: boolean }) {
   return (
     <>
       <group ref={g1} rotation={[Math.PI / 2.4, 0.4, 0]}>
-        <Torus args={[r1, 0.006, 8, 128]}>
+        <Torus args={[r1, 0.006, 6, 72]}>
           <meshBasicMaterial color={NEON} transparent opacity={0.35} />
         </Torus>
         {/* Спутник на орбите */}
         <mesh position={[r1, 0, 0]}>
-          <sphereGeometry args={[0.06, 16, 16]} />
+          <sphereGeometry args={[0.06, 12, 12]} />
           <meshBasicMaterial color={AMBER} />
         </mesh>
       </group>
       <group ref={g2} rotation={[Math.PI / 1.8, -0.5, 0.3]}>
-        <Torus args={[r2, 0.004, 8, 128]}>
+        <Torus args={[r2, 0.004, 6, 72]}>
           <meshBasicMaterial color={NEON} transparent opacity={0.2} />
         </Torus>
         <mesh position={[-r2, 0, 0]}>
-          <sphereGeometry args={[0.045, 16, 16]} />
+          <sphereGeometry args={[0.045, 12, 12]} />
           <meshBasicMaterial color={NEON} />
         </mesh>
       </group>
@@ -94,6 +94,15 @@ function GridFloor() {
     mat.opacity = 0.07;
     return g;
   }, []);
+
+  useEffect(() => {
+    return () => {
+      grid.geometry.dispose();
+      const materials = Array.isArray(grid.material) ? grid.material : [grid.material];
+      materials.forEach((material) => material.dispose());
+    };
+  }, [grid]);
+
   return <primitive object={grid} position={[0, -2.6, 0]} />;
 }
 
@@ -130,10 +139,25 @@ function SceneContent({ compact }: { compact?: boolean }) {
  * compact — облегчённый вариант для встраивания в hero-карточки.
  */
 export function NeonScene({ compact = false, className }: { compact?: boolean; className?: string }) {
+  const container = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const node = container.current;
+    if (!node || typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), {
+      rootMargin: "120px",
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className={className} aria-hidden>
+    <div ref={container} className={className} aria-hidden>
       <Canvas
-        dpr={[1, 1.75]}
+        dpr={compact ? [1, 1.25] : [1, 1.5]}
+        frameloop={visible ? "always" : "never"}
         camera={{ position: [0, compact ? 0 : 0.4, compact ? 7 : 7.5], fov: compact ? 45 : 42 }}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
         style={{ background: "transparent" }}

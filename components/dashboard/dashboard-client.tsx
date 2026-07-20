@@ -68,7 +68,11 @@ export function DashboardClient() {
       const email = user.email || "";
       const [repRes, nickRes, careerRes, vkRes] = await Promise.all([
         // В таблице reports нет created_at — сортируем по id (в нём таймстамп)
-        supa.from("reports").select("*").eq("email", email).order("id", { ascending: false }),
+        supa
+          .from("reports")
+          .select("id, email, date, status, xp")
+          .eq("email", email)
+          .order("id", { ascending: false }),
         supa.from("user_stats").select("nickname").eq("user_id", user.id).maybeSingle(),
         supa.from("moderator_careers").select("rank, rank_started_at").eq("site_user_id", user.id).maybeSingle(),
         supa.from("vk_links").select("vk_user_id").eq("site_user_id", user.id).maybeSingle(),
@@ -228,21 +232,7 @@ export function DashboardClient() {
       {/* Hero профиля */}
       <Reveal i={1}>
         <div className="hero-surface relative overflow-hidden rounded-3xl p-5 md:p-8">
-          {/* 3D-декор в правой части hero — только на десктопе.
-              Квадратный контейнер целиком внутри карточки + радиальная маска,
-              чтобы кристалл плавно растворялся по краям, а не обрезался. */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute top-1/2 right-2 hidden aspect-square h-[135%] -translate-y-1/2 opacity-80 [mask-image:radial-gradient(closest-side,black_45%,transparent_98%)] lg:block"
-          >
-            <NeonScene compact className="size-full" />
-          </div>
-          {/* Мягкий переход слева, чтобы текст оставался читаемым поверх декора */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 hidden bg-linear-to-r from-[oklch(0.24_0.05_152)] from-35% via-[oklch(0.24_0.05_152/0.35)] via-65% to-transparent lg:block"
-          />
-          <div className="relative flex flex-wrap items-start gap-x-5 gap-y-4">
+          <div className="relative grid grid-cols-1 items-start gap-4 sm:grid-cols-[minmax(0,1fr)_auto] xl:grid-cols-[minmax(0,1fr)_12rem_auto]">
             <div className="flex min-w-0 flex-1 items-start gap-4 sm:gap-5">
               <motion.div
                 whileHover={{ rotate: -4, scale: 1.04 }}
@@ -273,7 +263,15 @@ export function DashboardClient() {
                 </p>
               </div>
             </div>
-            <div className="bg-[oklch(0.2_0.04_152/0.55)] w-full shrink-0 rounded-2xl px-4 py-2.5 text-left backdrop-blur-sm sm:ml-auto sm:w-auto sm:text-right lg:bg-[oklch(0.2_0.04_152/0.7)]">
+            {/* На широком экране у 3D-декора есть собственная колонка: Canvas
+                физически не может оказаться под текстом или счётчиком XP. */}
+            <div
+              aria-hidden
+              className="pointer-events-none relative hidden h-24 overflow-hidden opacity-75 [mask-image:radial-gradient(closest-side,black_42%,transparent_100%)] xl:block"
+            >
+              <NeonScene compact className="absolute inset-0 size-full" />
+            </div>
+            <div className="bg-[oklch(0.2_0.04_152/0.78)] w-full shrink-0 rounded-2xl px-4 py-2.5 text-left backdrop-blur-sm sm:ml-auto sm:w-auto sm:text-right">
               <div className="font-display text-2xl font-extrabold tabular-nums sm:text-3xl">
                 <CountUp value={xp.modXp} className="text-green-bright text-glow" />
               </div>
