@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Manrope, Unbounded, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
+import { ClosedNotice } from "@/components/closed-notice";
 import "./globals.css";
 
 const manrope = Manrope({ subsets: ["latin", "cyrillic"], variable: "--font-manrope" });
@@ -14,8 +15,8 @@ const unbounded = Unbounded({
 const mono = JetBrains_Mono({ subsets: ["latin", "cyrillic"], variable: "--font-jbmono" });
 
 export const metadata: Metadata = {
-  title: "CHEREPOVETS · Модерация",
-  description: "Рабочее пространство модерации Discord-сервера CHEREPOVETS",
+  title: "CHEREPOVETS · Сайт закрыт",
+  description: "Сайт модерации закрыт",
 };
 
 export const viewport: Viewport = {
@@ -31,6 +32,7 @@ export default function RootLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
+  void children;
   return (
     <html
       lang="ru"
@@ -39,7 +41,7 @@ export default function RootLayout({
     >
       <body className="font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-          {children}
+          <ClosedNotice />
           <Toaster richColors position="top-center" />
         </ThemeProvider>
       </body>
